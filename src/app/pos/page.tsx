@@ -4,240 +4,240 @@ import { useState } from "react";
 import { CategoryList } from "@/components/pos/CategoryList";
 import { ProductGrid } from "@/components/pos/ProductGrid";
 import { Cart } from "@/components/pos/Cart";
-import { Product, Option } from "@/types";
-
+import { TableSelector } from "@/components/pos/TableSelector";
 import { PaymentDialog } from "@/components/pos/PaymentDialog";
 import { SplitBillDialog } from "@/components/pos/SplitBillDialog";
-import { TableSelector } from "@/components/pos/TableSelector";
-import { useTables } from "@/context/TablesContext";
 import { useOrders } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
+import { useTables } from "@/context/TablesContext";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, LayoutGrid, Monitor, ShoppingCart } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
+import { ShoppingCart, Plus, ArrowLeft, MoreHorizontal, LayoutGrid, Star, Pizza, UtensilsCrossed, GlassWater, Beef, Coffee } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useIsMobile } from "@/hooks";
+import { fabVariants, mobileSpring } from "@/lib/motion";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { useLanguage } from "@/context/LanguageContext";
+import { CATEGORIES } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 
-interface CartItem {
-    cartId: string;
-    productId: string;
-    name: string;
-    price: number;
-    quantity: number;
-    modifiers?: string[];
-    notes?: string;
-}
+const ICON_MAP: Record<string, any> = {
+    all: Star,
+    pizzas: Pizza,
+    pastas: UtensilsCrossed,
+    boissons: GlassWater,
+    entrees: UtensilsCrossed,
+    plats: Beef,
+    desserts: Coffee
+};
 
 export default function POSPage() {
-    const { tables, updateTableStatus } = useTables();
+    const { t } = useLanguage();
+    const isMobile = useIsMobile();
+    const { tables, updateTable } = useTables();
     const { addOrder } = useOrders();
-    const { deductStockForProduct } = useInventory();
     const { currentUser } = useAuth();
     const { showToast } = useToast();
 
-    const [selectedCategory, setSelectedCategory] = useState("pizzas");
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string>("all");
+    const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [isSplitOpen, setIsSplitOpen] = useState(false);
-    const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+    const [cartItems, setCartItems] = useState<any[]>([]);
 
     const currentTable = tables.find(t => t.id === selectedTableId);
+    const cartTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-    const handleAddToCart = (product: Product, quantity: number, selectedOptions: Record<string, Option[]>) => {
-        if (cartItems.length === 0 && selectedTableId) {
-            updateTableStatus(selectedTableId, 'seated');
-        }
-
-        let unitPrice = product.price;
-        const modifiersList: string[] = [];
-
-        Object.values(selectedOptions).forEach(options => {
-            options.forEach(opt => {
-                unitPrice += opt.priceModifier;
-                const priceStr = opt.priceModifier > 0 ? ` (+${opt.priceModifier.toFixed(2)}€)` : '';
-                modifiersList.push(`${opt.name}${priceStr}`);
-            });
-        });
-
-        const modifiersKey = modifiersList.sort().join("|");
-
-        setCartItems(prev => {
-            const existing = prev.find(item =>
-                item.productId === product.id &&
-                (item.modifiers || []).sort().join("|") === modifiersKey
-            );
-
-            if (existing) {
-                return prev.map(item =>
-                    item.cartId === existing.cartId
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item
-                );
-            }
-
-            return [...prev, {
-                cartId: Math.random().toString(36).substr(2, 9),
-                productId: product.id,
-                name: product.name,
-                price: unitPrice,
-                quantity: quantity,
-                modifiers: modifiersList
-            }];
-        });
+    const handleAddToCart = (product: any, quantity: number, selectedOptions: any, note?: string) => {
+        const cartId = `${product.id}-${Date.now()}`;
+        const newItem = {
+            cartId,
+            productId: product.id,
+            categoryId: product.categoryId,
+            name: product.name,
+            price: product.price,
+            quantity,
+            modifiers: Object.values(selectedOptions).flat().map((opt: any) => opt.name),
+            notes: note
+        };
+        setCartItems(prev => [...prev, newItem]);
+        showToast(`${product.name} ajouté`, "success");
     };
 
     const handleUpdateQuantity = (cartId: string, delta: number) => {
-        setCartItems(prev => prev.map(item => {
-            if (item.cartId === cartId) {
-                return { ...item, quantity: Math.max(0, item.quantity + delta) };
-            }
-            return item;
-        }).filter(item => item.quantity > 0));
+        setCartItems(prev => prev.map(item =>
+            item.cartId === cartId ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
+        ).filter(item => item.quantity > 0));
     };
 
-    const handleClearCart = () => {
-        setCartItems([]);
-    };
+    const handleClearCart = () => setCartItems([]);
 
     const handleCheckout = () => {
-        if (cartItems.length > 0) {
-            setIsPaymentOpen(true);
-        }
+        if (cartItems.length === 0) return;
+        setIsPaymentOpen(true);
     };
 
     const handleSendToKitchen = () => {
-        if (selectedTableId && cartItems.length > 0) {
-            addOrder({
-                tableId: selectedTableId,
-                tableNumber: currentTable?.number || "??",
-                serverName: currentUser?.name || "Inconnu",
-                items: cartItems.map(item => ({
-                    id: Math.random().toString(36).substr(2, 9),
-                    productId: item.productId,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                    modifiers: item.modifiers,
-                    notes: item.notes,
-                    status: 'cooking'
-                }))
-            });
-
-            // Update table status to 'seated' (occupied) but don't clear it
-            updateTableStatus(selectedTableId, 'seated');
-
-            showToast(`Bon envoyé en cuisine - Table ${currentTable?.number}`, "success");
-            setCartItems([]);
-            setSelectedTableId(null); // Back to floor plan
+        if (cartItems.length === 0) return;
+        showToast(`Table ${currentTable?.number} : Commande envoyée`, "success");
+        setCartItems([]);
+        if (selectedTableId) {
+            updateTable(selectedTableId, { status: 'ordered' });
         }
     };
 
     const handlePaymentComplete = () => {
-        if (selectedTableId) {
-            addOrder({
-                tableId: selectedTableId,
-                tableNumber: currentTable?.number || "??",
-                serverName: currentUser?.name || "Inconnu",
-                items: cartItems.map(item => ({
-                    id: Math.random().toString(36).substr(2, 9),
-                    productId: item.productId,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                    modifiers: item.modifiers,
-                    notes: item.notes,
-                    status: 'cooking'
-                }))
-            });
+        if (!currentTable) return;
 
-            cartItems.forEach(item => {
-                deductStockForProduct(item.productId, item.quantity);
-            });
+        addOrder({
+            tableId: currentTable.id,
+            tableNumber: currentTable.number,
+            serverName: currentUser?.name || 'Server',
+            items: cartItems.map(item => ({
+                id: item.cartId,
+                productId: item.productId,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                status: 'served',
+                notes: item.notes,
+                modifiers: item.modifiers
+            })),
+            status: 'paid'
+        });
 
-            updateTableStatus(selectedTableId, 'free');
-            showToast(`Encaissement Table ${currentTable?.number} réussi`, "success");
-        }
-        setCartItems([]);
+        updateTable(currentTable.id, { status: 'free' });
         setIsPaymentOpen(false);
         setSelectedTableId(null);
+        handleClearCart();
+        showToast("Paiement validé. Table libérée.", "success");
     };
-
-    const cartTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
     if (!selectedTableId) {
         return (
-            <div className="flex h-[calc(100vh-70px)] -m-6 bg-white overflow-hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full bg-bg-primary overflow-hidden">
                 <TableSelector onSelectTable={setSelectedTableId} />
-            </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="flex h-[calc(100vh-80px)] -m-8 overflow-hidden bg-bg-primary">
-            {/* 1. Module Sidebar (Icons Only) */}
-            <CategoryList
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-            />
-
-            {/* 2. Main Area (Top Bar + Product Grid) */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden border-r border-border">
-                <div className="h-20 flex items-center justify-between px-8 bg-white border-b border-border">
-                    <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => setSelectedTableId(null)}
-                            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-text-muted hover:text-text-primary transition-all group"
-                        >
-                            <ArrowLeft strokeWidth={1.5} className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                            Retour
+        <div className="flex flex-1 flex-col bg-bg-primary h-[calc(100vh-80px)] lg:h-[calc(100vh-100px)] -m-4 lg:-m-8 overflow-hidden relative pb-24 lg:pb-0">
+            {/* Header & Categories Swiper */}
+            <div className="bg-white/80 dark:bg-bg-primary/80 backdrop-blur-2xl px-6 py-4 border-b border-border/50 sticky top-0 z-40">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setSelectedTableId(null)} className="text-text-muted">
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <div className="h-4 w-px bg-border" />
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-serif font-semibold text-text-primary">
-                                Table {currentTable?.number}
-                            </h2>
-                            <div className="flex items-center gap-2 px-2 py-0.5 rounded bg-success-soft border border-success/10">
-                                <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-success">Service en cours</span>
-                            </div>
-                        </div>
+                        <h1 className="text-2xl font-serif font-black italic text-text-primary tracking-tight">Table {currentTable?.number}<span className="text-accent-gold ml-1">.</span></h1>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => showToast("Mode Moniteur KDS activé", "info")}
-                            className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-tertiary rounded-lg transition-all"
-                        >
-                            <Monitor strokeWidth={1.5} className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => showToast("Changement de la grille d'affichage", "info")}
-                            className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-tertiary rounded-lg transition-all border border-transparent"
-                        >
-                            <LayoutGrid strokeWidth={1.5} className="w-5 h-5" />
-                        </button>
-                    </div>
+                    <button className="w-10 h-10 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted">
+                        <MoreHorizontal className="w-5 h-5" />
+                    </button>
                 </div>
 
-                <ProductGrid
-                    categoryFilter={selectedCategory}
-                    onAddToCart={handleAddToCart}
-                />
+                {/* Horizontal Category Swiper */}
+                <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                    <button
+                        onClick={() => setSelectedCategory("all")}
+                        className={cn(
+                            "flex items-center gap-2 h-10 px-5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                            selectedCategory === "all" ? "bg-accent-gold text-white shadow-lg scale-105" : "bg-bg-tertiary text-text-muted"
+                        )}
+                    >
+                        <Star className="w-3.5 h-3.5" />
+                        Favoris
+                    </button>
+                    {CATEGORIES.map(cat => {
+                        const Icon = ICON_MAP[cat.id] || UtensilsCrossed;
+                        return (
+                            <button
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(cat.id)}
+                                className={cn(
+                                    "flex items-center gap-2 h-10 px-5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                                    selectedCategory === cat.id ? "bg-accent-gold text-white shadow-lg scale-105" : "bg-bg-tertiary text-text-muted"
+                                )}
+                            >
+                                <Icon className="w-3.5 h-3.5" />
+                                {t(`pos.categories.${cat.id}`)}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* 3. Cart Sidebar */}
-            <div className="h-full">
-                <Cart
-                    items={cartItems}
-                    onUpdateQuantity={handleUpdateQuantity}
-                    onClearCart={handleClearCart}
-                    onCheckout={handleCheckout}
-                    onSendToKitchen={handleSendToKitchen}
-                    onSplitBill={() => setIsSplitOpen(true)}
-                    tableNumber={currentTable?.number}
-                    guestCount={currentTable?.seats}
-                />
+            {/* Product Grid */}
+            <div className="flex-1 overflow-auto p-4 lg:p-12 elegant-scrollbar bg-bg-primary/50">
+                <ProductGrid categoryFilter={selectedCategory} onAddToCart={handleAddToCart} />
             </div>
+
+            {/* Mobile Cart Tray (Dock UX) */}
+            <AnimatePresence>
+                {cartItems.length > 0 && !isMobileCartOpen && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-28 left-6 right-6 z-50 pointer-events-none"
+                    >
+                        <button
+                            onClick={() => setIsMobileCartOpen(true)}
+                            className="pointer-events-auto w-full h-16 bg-text-primary dark:bg-accent-gold text-white dark:text-bg-primary rounded-[2rem] px-8 flex items-center justify-between shadow-2xl border border-white/10 group overflow-hidden relative"
+                        >
+                            <div className="absolute inset-0 bg-white/5 opacity-0 group-active:opacity-100 transition-opacity" />
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center font-black text-xs">
+                                    {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Ouvrir le Panier</span>
+                            </div>
+                            <div className="flex items-center gap-4 relative z-10">
+                                <span className="text-xl font-mono font-bold italic">{cartTotal.toFixed(2)}€</span>
+                                <Plus className="w-6 h-6 rotate-45 opacity-40" />
+                            </div>
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Cart Sheet (Mobile) / Desktop Sidebar */}
+            {!isMobile && (
+                <div className="h-full hidden xl:block w-[400px]">
+                    <Cart
+                        items={cartItems}
+                        onUpdateQuantity={handleUpdateQuantity}
+                        onClearCart={handleClearCart}
+                        onCheckout={handleCheckout}
+                        onSendToKitchen={handleSendToKitchen}
+                        onSplitBill={() => setIsSplitOpen(true)}
+                        tableNumber={currentTable?.number}
+                        guestCount={currentTable?.seats}
+                    />
+                </div>
+            )}
+
+            <BottomSheet
+                isOpen={isMobileCartOpen}
+                onClose={() => setIsMobileCartOpen(false)}
+                title={`Panier Table ${currentTable?.number}`}
+                size="full"
+            >
+                <div className="h-full flex flex-col -mt-4">
+                    <Cart
+                        items={cartItems}
+                        onUpdateQuantity={handleUpdateQuantity}
+                        onClearCart={handleClearCart}
+                        onCheckout={() => { setIsMobileCartOpen(false); handleCheckout(); }}
+                        onSendToKitchen={() => { setIsMobileCartOpen(false); handleSendToKitchen(); }}
+                        onSplitBill={() => { setIsMobileCartOpen(false); setIsSplitOpen(true); }}
+                        tableNumber={currentTable?.number}
+                        guestCount={currentTable?.seats}
+                        showClose={false}
+                    />
+                </div>
+            </BottomSheet>
 
             <PaymentDialog
                 isOpen={isPaymentOpen}
@@ -253,7 +253,7 @@ export default function POSPage() {
                 guestCount={currentTable?.seats || 2}
                 onClose={() => setIsSplitOpen(false)}
                 onPaySplit={(amount, guestIndex) => {
-                    showToast(`Convive ${guestIndex + 1} a payé ${amount.toFixed(2)}€`, "success");
+                    showToast(`Guest ${guestIndex + 1} : ${amount.toFixed(2)}€ payé`, "success");
                 }}
             />
         </div>

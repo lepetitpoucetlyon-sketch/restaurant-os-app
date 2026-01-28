@@ -41,7 +41,7 @@ export function QuantitySelector({
                 // Background - MC: Light Green | MS: Dark Forest Green
                 "bg-[#E6F9EF] dark:bg-[#062D1F]/80 dark:backdrop-blur-md",
                 // Contour/Border
-                "border border-[#00D764]/20 dark:border-[#00D764]/30",
+                "border border-accent/20 dark:border-accent/30",
                 // Liquid Glass Highlight (Top edge)
                 "before:absolute before:top-0 before:left-4 before:right-4 before:h-[1px]",
                 "before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
@@ -88,8 +88,8 @@ export function QuantitySelector({
                 disabled={value >= max}
                 className={cn(
                     "relative flex items-center justify-center w-10 h-10 rounded-full transition-shadow",
-                    "bg-[#00D764] text-white shadow-[0_0_15px_-3px_#00D764]",
-                    "hover:shadow-[0_0_20px_-2px_#00D764]",
+                    "bg-accent text-white shadow-[0_0_15px_-3px_#C5A059]",
+                    "hover:shadow-[0_0_20px_-2px_#C5A059]",
                     // Liquid glass highlight on the button itself
                     "after:absolute after:top-1 after:left-1/2 after:-translate-x-1/2 after:w-1/2 after:h-[1px] after:bg-white/40 after:rounded-full after:blur-[0.5px]"
                 )}

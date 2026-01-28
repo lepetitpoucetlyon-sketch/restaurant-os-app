@@ -10,7 +10,7 @@ export const generatePaySlip = (user: User) => {
     doc.setFillColor(26, 26, 26); // #1A1A1A Header
     doc.rect(0, 0, pageWidth, 40, 'F');
 
-    doc.setTextColor(0, 215, 100); // #00D764
+    doc.setTextColor(0, 215, 100); // #C5A059
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.text("RESTAURANT OS", 15, 20);

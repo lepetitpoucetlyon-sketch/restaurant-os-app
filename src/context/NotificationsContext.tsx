@@ -1,137 +1,88 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, ReactNode } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/lib/db';
+import { Notification } from '@/types';
 
 /**
  * NOTIFICATIONS CONTEXT - Restaurant OS
- * Manages real-time alerts and notifications across the application
+ * Manages real-time alerts and notifications across the application via Dexie.js
  */
-
-export type NotificationType = 'info' | 'warning' | 'critical' | 'success';
-
-export interface Notification {
-    id: string;
-    type: NotificationType;
-    title: string;
-    message: string;
-    timestamp: Date;
-    read: boolean;
-    module?: string;
-    action?: {
-        label: string;
-        href?: string;
-    };
-}
 
 interface NotificationsContextType {
     notifications: Notification[];
     unreadCount: number;
-    addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
-    markAsRead: (id: string) => void;
-    markAllAsRead: () => void;
-    removeNotification: (id: string) => void;
-    clearAll: () => void;
+    isLoading: boolean;
+    addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => Promise<void>;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
+    removeNotification: (id: string) => Promise<void>;
+    clearAll: () => Promise<void>;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
 // Initial demo notifications
-const INITIAL_NOTIFICATIONS: Notification[] = [
-    {
-        id: 'notif_1',
-        type: 'critical',
-        title: 'Stock Critique',
-        message: 'Mozzarella di Bufala sous le seuil minimum (2.5kg restants)',
-        timestamp: new Date(Date.now() - 12 * 60000),
-        read: false,
-        module: 'inventory',
-        action: { label: 'Commander', href: '/inventory' }
-    },
-    {
-        id: 'notif_2',
-        type: 'warning',
-        title: 'Retard Pointage',
-        message: 'Marie Laurent - 15 min de retard au service',
-        timestamp: new Date(Date.now() - 8 * 60000),
-        read: false,
-        module: 'staff',
-        action: { label: 'Voir Planning', href: '/planning' }
-    },
-    {
-        id: 'notif_3',
-        type: 'info',
-        title: 'Réservation VIP',
-        message: 'Marco Rossi (fidèle) arrive dans 30 minutes - Table 4',
-        timestamp: new Date(Date.now() - 30 * 60000),
-        read: false,
-        module: 'reservations',
-        action: { label: 'Voir Réservation', href: '/reservations' }
-    },
+const INITIAL_NOTIFICATIONS: Partial<Notification>[] = [
+    { id: 'notif_1', type: 'critical', title: 'Stock Critique', message: 'Mozzarella di Bufala sous le seuil minimum (2.5kg restants)', timestamp: new Date(Date.now() - 12 * 60000), read: false, module: 'inventory', action: { label: 'Commander', href: '/inventory' } },
+    { id: 'notif_2', type: 'warning', title: 'Retard Pointage', message: 'Marie Laurent - 15 min de retard au service', timestamp: new Date(Date.now() - 8 * 60000), read: false, module: 'staff', action: { label: 'Voir Planning', href: '/planning' } },
 ];
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const notifications = useLiveQuery(() => db.notifications.orderBy('timestamp').reverse().toArray()) || [];
+    const isLoading = typeof notifications === 'undefined';
 
-    // Load from localStorage on mount
+    const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
+
+    // Initial Migration
     useEffect(() => {
-        const saved = localStorage.getItem('executive_os_notifications');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                setNotifications(parsed.map((n: any) => ({
-                    ...n,
-                    timestamp: new Date(n.timestamp)
-                })));
-            } catch {
-                setNotifications(INITIAL_NOTIFICATIONS);
+        const migrate = async () => {
+            const count = await db.notifications.count();
+            if (count === 0) {
+                const saved = localStorage.getItem('executive_os_notifications');
+                if (saved) {
+                    const parsed = JSON.parse(saved).map((n: any) => ({ ...n, timestamp: new Date(n.timestamp) }));
+                    await db.notifications.bulkAdd(parsed);
+                } else {
+                    await db.notifications.bulkAdd(INITIAL_NOTIFICATIONS as Notification[]);
+                }
             }
-        } else {
-            setNotifications(INITIAL_NOTIFICATIONS);
-        }
+        };
+        migrate();
     }, []);
 
-    // Save to localStorage when changed
-    useEffect(() => {
-        if (notifications.length > 0) {
-            localStorage.setItem('executive_os_notifications', JSON.stringify(notifications));
-        }
-    }, [notifications]);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const addNotification = (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    const addNotification = async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
         const newNotification: Notification = {
             ...notification,
-            id: `notif_${Date.now()}`,
+            id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             timestamp: new Date(),
             read: false,
         };
-        setNotifications(prev => [newNotification, ...prev]);
+        await db.notifications.add(newNotification);
     };
 
-    const markAsRead = (id: string) => {
-        setNotifications(prev =>
-            prev.map(n => n.id === id ? { ...n, read: true } : n)
-        );
+    const markAsRead = async (id: string) => {
+        await db.notifications.update(id, { read: true });
     };
 
-    const markAllAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+        await db.notifications.toCollection().modify({ read: true });
     };
 
-    const removeNotification = (id: string) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+    const removeNotification = async (id: string) => {
+        await db.notifications.delete(id);
     };
 
-    const clearAll = () => {
-        setNotifications([]);
-        localStorage.removeItem('executive_os_notifications');
+    const clearAll = async () => {
+        await db.notifications.clear();
     };
 
     return (
         <NotificationsContext.Provider value={{
             notifications,
             unreadCount,
+            isLoading,
             addNotification,
             markAsRead,
             markAllAsRead,

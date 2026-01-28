@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Package,
     ArrowDownLeft,
@@ -15,351 +15,240 @@ import {
     Truck,
     CheckCircle2,
     Clock,
+    ChefHat,
+    ArrowRight,
+    Calendar,
+    Thermometer,
+    MapPin,
+    Trash2,
+    Eye,
+    RefreshCw,
     XCircle,
-    PackageCheck
+    PackageCheck,
+    BookOpen,
+    Layers,
+    User,
+    ChevronRight,
+    SearchIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useInventory } from "@/context/InventoryContext";
-import { SupplierOrder, SupplierOrderStatus, Ingredient } from "@/types";
 import { cn } from "@/lib/utils";
+import { useInventory } from "@/context/InventoryContext";
+import { SupplierOrder, SupplierOrderStatus } from "@/types";
 import { useToast } from "@/components/ui/Toast";
+import { useUI } from "@/context/UIContext";
+import { StockReceptionModal, CreatePreparationModal, StockTransferModal } from "@/components/inventory";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { fadeInUp, easing } from "@/lib/motion";
+import { useLanguage } from "@/context/LanguageContext";
+import { useIsMobile } from "@/hooks";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 
-const StatCard = ({ title, value, sub, icon: Icon, color }: any) => (
-    <div className="bg-white p-8 rounded-xl border border-border shadow-sm hover:shadow-xl transition-all duration-500 group">
-        <div className="flex justify-between items-start">
-            <div>
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mb-3">{title}</p>
-                <h3 className="text-3xl font-mono font-medium text-text-primary">{value}</h3>
-                <p className="text-[10px] font-bold text-success mt-3 flex items-center gap-2">
-                    <TrendingUp strokeWidth={1.5} className="w-3.5 h-3.5" />
-                    {sub}
-                </p>
-            </div>
-            <div className={cn("w-12 h-12 rounded-lg bg-bg-tertiary flex items-center justify-center border border-border group-hover:bg-accent group-hover:text-white transition-all duration-300", color)}>
-                <Icon strokeWidth={1.5} className="w-6 h-6" />
-            </div>
-        </div>
-    </div>
-);
-
-// Status config for visual display
-const ORDER_STATUS_CONFIG: Record<SupplierOrderStatus, { label: string; color: string; icon: any; bg: string }> = {
-    draft: { label: 'Brouillon', color: 'text-text-muted', bg: 'bg-bg-tertiary', icon: Clock },
-    pending: { label: 'En attente', color: 'text-warning', bg: 'bg-warning-soft', icon: Clock },
-    confirmed: { label: 'Confirmée', color: 'text-accent', bg: 'bg-accent/5', icon: CheckCircle2 },
-    shipped: { label: 'Expédiée', color: 'text-indigo-600', bg: 'bg-indigo-50', icon: Truck },
-    delivered: { label: 'Livrée', color: 'text-success', bg: 'bg-success-soft', icon: PackageCheck },
-    cancelled: { label: 'Annulée', color: 'text-error', bg: 'bg-error-soft', icon: XCircle },
+const CATEGORY_LABELS: Record<string, string> = {
+    produce: 'Fruits & Légumes',
+    dairy: 'Produits Laitiers',
+    meat: 'Viandes',
+    poultry: 'Volailles',
+    seafood: 'Poissons',
+    charcuterie: 'Charcuterie',
+    bakery: 'Boulangerie',
+    dry: 'Épicerie',
+    condiment: 'Condiments',
+    spice: 'Épices',
+    oil: 'Huiles',
+    beverage: 'Boissons',
+    wine: 'Vins',
+    spirits: 'Spiritueux',
+    frozen: 'Surgelés',
+    other: 'Autre'
 };
 
 export default function InventoryPage() {
-    const { ingredients, lowStockItems, supplierOrders, receiveOrder, cancelOrder } = useInventory();
+    const isMobile = useIsMobile();
+    const { t } = useLanguage();
+    const {
+        ingredients,
+        stockItems,
+        preparations,
+        lowStockItems,
+        supplierOrders,
+        receiveOrder,
+        cancelOrder,
+        storageLocations,
+        getExpiringStock,
+        getExpiringPreparations,
+        discardPreparation
+    } = useInventory();
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<'inventory' | 'orders'>('inventory');
 
-    const totalValue = ingredients.reduce((acc, item) => acc + (item.quantity * item.cost), 0);
-    const pendingOrders = supplierOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
+    const [activeTab, setActiveTab] = useState<'stock' | 'preparations' | 'orders'>('stock');
+    const [isReceptionModalOpen, setIsReceptionModalOpen] = useState(false);
+    const [isPreparationModalOpen, setIsPreparationModalOpen] = useState(false);
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
-    const getStatus = (item: typeof ingredients[0]) => {
-        if (item.quantity <= item.minQuantity * 0.5) return "critical";
-        if (item.quantity <= item.minQuantity) return "low";
-        return "ok";
-    };
+    // Filter stock items
+    const filteredStockItems = useMemo(() => {
+        let items = stockItems.filter(s => s.status !== 'expired' && s.quantity > 0);
+        if (searchQuery) items = items.filter(s => s.ingredientName.toLowerCase().includes(searchQuery.toLowerCase()));
+        if (filterCategory) items = items.filter(s => s.category === filterCategory);
+        return items.sort((a, b) => new Date(a.dlc).getTime() - new Date(b.dlc).getTime());
+    }, [stockItems, searchQuery, filterCategory]);
 
-    const handleReceiveOrder = (order: SupplierOrder) => {
-        receiveOrder(order.id);
-        showToast(`Commande ${order.id} réceptionnée ! Stock mis à jour.`, "success");
-    };
+    // Filter preparations
+    const filteredPreparations = useMemo(() => {
+        let preps = preparations.filter(p => p.status !== 'discarded' && p.status !== 'expired');
+        if (searchQuery) preps = preps.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        return preps.sort((a, b) => new Date(a.dlc).getTime() - new Date(b.dlc).getTime());
+    }, [preparations, searchQuery]);
 
-    const handleCancelOrder = (order: SupplierOrder) => {
-        cancelOrder(order.id);
-        showToast(`Commande ${order.id} annulée.`, "info");
+    const categories = [...new Set(stockItems.map(s => s.category))];
+
+    const getDlcColor = (dlc: string) => {
+        const diff = new Date(dlc).getTime() - new Date().getTime();
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        if (days <= 0) return "text-error";
+        if (days <= 2) return "text-warning";
+        return "text-success";
     };
 
     return (
-        <div className="flex flex-1 -m-8 flex-col bg-bg-primary min-h-screen overflow-hidden">
-            {/* Header Area */}
-            <div className="flex items-center justify-between bg-white border-b border-border px-10 py-6">
-                <div className="flex items-center gap-10">
-                    <div className="flex flex-col">
-                        <h1 className="text-2xl font-serif font-semibold text-text-primary tracking-tight">Gestion des Stocks</h1>
-                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
-                            Flux & Approvisionnement
-                        </p>
-                    </div>
-
-                    {/* Tab Switcher */}
-                    <div className="flex p-1.5 bg-bg-tertiary rounded-xl border border-border">
-                        <button
-                            onClick={() => setActiveTab('inventory')}
-                            className={cn(
-                                "h-9 px-6 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all",
-                                activeTab === 'inventory'
-                                    ? "bg-white text-accent shadow-sm"
-                                    : "text-text-muted hover:text-text-primary"
-                            )}
-                        >
-                            <span className="flex items-center gap-2">
-                                <Package strokeWidth={activeTab === 'inventory' ? 2 : 1.5} className="w-3.5 h-3.5" />
-                                Inventaire
-                            </span>
+        <div className="flex flex-1 flex-col bg-bg-primary h-[calc(100vh-80px)] lg:h-[calc(100vh-100px)] -m-4 lg:-m-8 overflow-hidden relative pb-24 lg:pb-0">
+            {/* Header & Search */}
+            <div className="bg-white/80 dark:bg-bg-primary/80 backdrop-blur-2xl px-6 py-6 border-b border-border/50 sticky top-0 z-40">
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-4xl font-serif font-black italic text-text-primary tracking-tight">{t('inventory.tabs.archive')}</h1>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setIsTransferModalOpen(true)} className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                            <RefreshCw className="w-5 h-5" />
                         </button>
-                        <button
-                            onClick={() => setActiveTab('orders')}
-                            className={cn(
-                                "h-9 px-6 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2",
-                                activeTab === 'orders'
-                                    ? "bg-white text-accent shadow-sm"
-                                    : "text-text-muted hover:text-text-primary"
-                            )}
-                        >
-                            <Truck strokeWidth={activeTab === 'orders' ? 2 : 1.5} className="w-3.5 h-3.5" />
-                            Commandes
-                            {pendingOrders.length > 0 && (
-                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-accent text-white text-[9px] font-mono leading-none">
-                                    {pendingOrders.length}
-                                </span>
-                            )}
+                        <button onClick={() => setIsReceptionModalOpen(true)} className="w-12 h-12 rounded-full bg-text-primary text-white flex items-center justify-center">
+                            <Plus className="w-6 h-6" />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <Button variant="outline" className="h-11 border-border rounded-lg font-bold text-[11px] uppercase tracking-widest text-text-muted hover:text-text-primary bg-white shadow-sm transition-all px-6">
-                        <ArrowDownLeft strokeWidth={1.5} className="mr-3 h-4 w-4" />
-                        Réception
-                    </Button>
-                    <Button
-                        onClick={() => showToast("Formulaire de commande fournisseur (Fonctionnalité à venir)", "info")}
-                        className="btn-elegant-primary h-11 px-8 shadow-lg shadow-accent/10"
-                    >
-                        <Plus strokeWidth={1.5} className="h-4 w-4 mr-3" />
-                        Nouvelle Commande
-                    </Button>
+                <div className="relative mb-6">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30" />
+                    <input
+                        type="text"
+                        placeholder={t('inventory.search.archive')}
+                        className="w-full h-14 pl-14 pr-6 bg-bg-tertiary/50 rounded-2xl border-none text-[10px] font-black uppercase tracking-widest outline-none"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
+                {/* Horizontal Navigation Tabs */}
+                <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                    {[
+                        { id: 'stock', label: t('inventory.tabs.archive'), icon: PackageCheck },
+                        { id: 'preparations', label: t('inventory.tabs.kitchen'), icon: ChefHat },
+                        { id: 'orders', label: t('inventory.tabs.logistics'), icon: Truck }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={cn(
+                                "flex items-center gap-2 h-11 px-6 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                                activeTab === tab.id ? "bg-accent-gold text-white" : "bg-bg-tertiary text-text-muted"
+                            )}
+                        >
+                            <tab.icon className="w-3.5 h-3.5" />
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-10 space-y-10 elegant-scrollbar">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <StatCard
-                        title="Valeur Inventaire"
-                        value={`${totalValue.toLocaleString('fr-FR')} €`}
-                        sub="+3.4% / mois"
-                        icon={Package}
-                        color="text-success"
-                    />
-                    <StatCard
-                        title="Alertes Rupture"
-                        value={`${lowStockItems.length} items`}
-                        sub="Action requise"
-                        icon={AlertTriangle}
-                        color="text-error"
-                    />
-                    <StatCard
-                        title="Commandes"
-                        value={`${pendingOrders.length}`}
-                        sub="À réceptionner"
-                        icon={Truck}
-                        color="text-warning"
-                    />
-                    <StatCard
-                        title="Score HACCP"
-                        value="98.2%"
-                        sub="Excellence"
-                        icon={ShieldCheck}
-                        color="text-accent"
-                    />
-                </div>
-
-                {/* Tab Content */}
-                {activeTab === 'inventory' ? (
-                    /* Inventory List */
-                    <div className="bg-white rounded-xl border border-border shadow-sm flex flex-col overflow-hidden">
-                        <div className="p-8 border-b border-border/50 bg-white flex items-center justify-between gap-8">
-                            <div className="relative flex-1 max-w-xl">
-                                <Search strokeWidth={1.5} className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher par nom ou catégorie..."
-                                    className="input-elegant w-full pl-11 pr-4 py-3 text-[13px]"
-                                />
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <Button variant="outline" size="icon" className="h-11 w-11 rounded-lg border-border hover:border-accent hover:text-accent transition-colors">
-                                    <Filter strokeWidth={1.5} className="h-4 w-4" />
-                                </Button>
-                                <Button variant="outline" className="h-11 px-6 rounded-lg border-border font-bold text-[11px] uppercase tracking-widest gap-3 text-text-muted hover:text-text-primary transition-all">
-                                    <FileDown strokeWidth={1.5} className="h-4 w-4" />
-                                    Exporter
-                                </Button>
-                            </div>
+            {/* List Content */}
+            <div className="flex-1 overflow-auto p-4 space-y-4 elegant-scrollbar">
+                {activeTab === 'stock' && (
+                    <div className="space-y-4">
+                        {/* Categories Scroll (Sub-categories) */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar px-1 py-1">
+                            <button
+                                onClick={() => setFilterCategory(null)}
+                                className={cn("px-4 h-9 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all", !filterCategory ? "bg-text-primary text-white border-transparent" : "bg-white dark:bg-bg-secondary border-border text-text-muted")}
+                            >
+                                Tout
+                            </button>
+                            {categories.map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setFilterCategory(cat)}
+                                    className={cn("px-4 h-9 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all whitespace-nowrap", filterCategory === cat ? "bg-text-primary text-white border-transparent" : "bg-white dark:bg-bg-secondary border-border text-text-muted")}
+                                >
+                                    {CATEGORY_LABELS[cat] || cat}
+                                </button>
+                            ))}
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr className="bg-bg-tertiary/20 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] border-b border-border/50">
-                                        <th className="px-10 py-5 text-left">Inclusion Stock</th>
-                                        <th className="px-8 py-5 text-left">Fournisseur Principal</th>
-                                        <th className="px-8 py-5 text-left">Unité</th>
-                                        <th className="px-8 py-5 text-right">Stock Actuel</th>
-                                        <th className="px-8 py-5 text-right">Seuil Crit.</th>
-                                        <th className="px-8 py-5 text-center">État de Santé</th>
-                                        <th className="px-10 py-5 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/30">
-                                    {ingredients.map(item => {
-                                        const status = getStatus(item);
-                                        return (
-                                            <tr key={item.id} className="group hover:bg-bg-tertiary/20 transition-all duration-300">
-                                                <td className="px-10 py-6">
-                                                    <div className="flex items-center gap-5">
-                                                        <div className="w-10 h-10 rounded-lg bg-bg-tertiary flex items-center justify-center font-serif text-[15px] font-semibold text-text-primary group-hover:bg-accent group-hover:text-white transition-all">
-                                                            {item.name.charAt(0)}
-                                                        </div>
-                                                        <span className="font-serif font-semibold text-[15px] text-text-primary group-hover:text-accent transition-colors">{item.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <span className="text-[12px] font-medium text-text-primary">{item.supplier}</span>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest px-2.5 py-1.5 bg-bg-tertiary rounded-lg border border-border/40">{item.unit}</span>
-                                                </td>
-                                                <td className="px-8 py-6 text-right font-mono font-medium text-[14px] text-text-primary">
-                                                    {item.quantity.toFixed(2)}
-                                                </td>
-                                                <td className="px-8 py-6 text-right font-mono text-text-muted text-[13px]">
-                                                    {item.minQuantity}
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="flex justify-center">
-                                                        {status === "critical" && (
-                                                            <span className="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-error-soft text-error border border-error/20">Critique</span>
-                                                        )}
-                                                        {status === "low" && (
-                                                            <span className="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-warning-soft text-warning border border-warning/20">Alerte</span>
-                                                        )}
-                                                        {status === "ok" && (
-                                                            <span className="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-success-soft text-success border border-success/20">Optimal</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-10 py-6 text-right">
-                                                    <button className="p-2 text-text-muted hover:text-accent transition-all">
-                                                        <MoreVertical strokeWidth={1.5} className="w-5 h-5" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                        {filteredStockItems.map((item, idx) => (
+                            <motion.div
+                                key={item.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.03 }}
+                                className="bg-white dark:bg-bg-secondary p-4 rounded-[2rem] border border-border/50 flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-bg-tertiary flex items-center justify-center border border-border">
+                                        <Package className="w-6 h-6 text-text-muted/40" strokeWidth={1.5} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xl font-serif font-black italic text-text-primary tracking-tight leading-none">{item.ingredientName}</h4>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <span className="text-[8px] font-black text-accent-gold uppercase tracking-widest">{CATEGORY_LABELS[item.category] || item.category}</span>
+                                            <div className="w-1 h-1 rounded-full bg-border" />
+                                            <span className={cn("text-[8px] font-black uppercase tracking-widest", getDlcColor(item.dlc))}>
+                                                DLC {new Date(item.dlc).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right pr-2">
+                                    <p className="text-3xl font-serif font-black italic text-text-primary leading-none">{item.quantity}</p>
+                                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mt-1">{item.unit}</p>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
-                ) : (
-                    /* Supplier Orders List */
-                    <div className="bg-white rounded-xl border border-border shadow-sm flex flex-col overflow-hidden">
-                        <div className="p-8 border-b border-border/50 bg-white flex items-center justify-between gap-8">
-                            <h2 className="text-xl font-serif font-semibold text-text-primary">Commandes Fournisseurs</h2>
-                            <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">
-                                    {supplierOrders.length} enregistrements au total
-                                </span>
-                            </div>
-                        </div>
+                )}
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr className="bg-bg-tertiary/20 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] border-b border-border/50">
-                                        <th className="px-10 py-5 text-left">Référence No.</th>
-                                        <th className="px-8 py-5 text-left">Maison / Fournisseur</th>
-                                        <th className="px-8 py-5 text-left">Articles Commandés</th>
-                                        <th className="px-8 py-5 text-right">Volume Fin.</th>
-                                        <th className="px-8 py-5 text-center">Émis le</th>
-                                        <th className="px-8 py-5 text-center">État Flux</th>
-                                        <th className="px-10 py-5 text-right">Décision</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/30">
-                                    {supplierOrders.map(order => {
-                                        const statusConfig = ORDER_STATUS_CONFIG[order.status];
-                                        const StatusIcon = statusConfig.icon;
-                                        return (
-                                            <tr key={order.id} className="group hover:bg-bg-tertiary/20 transition-all duration-300">
-                                                <td className="px-10 py-6">
-                                                    <span className="font-mono font-medium text-[13px] text-accent">#{order.id.toUpperCase()}</span>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <span className="font-serif font-semibold text-[15px] text-text-primary">{order.supplier}</span>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="flex flex-col gap-1.5">
-                                                        {order.items.map((item, i) => (
-                                                            <span key={i} className="text-[12px] font-medium text-text-muted">
-                                                                <span className="font-mono text-text-primary">{item.quantity}</span> &times; {item.ingredientName}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6 text-right font-mono font-medium text-[14px] text-text-primary">
-                                                    {order.totalAmount.toFixed(2)} €
-                                                </td>
-                                                <td className="px-8 py-6 text-center text-[12px] font-medium text-text-muted">
-                                                    {order.orderDate}
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="flex justify-center">
-                                                        <span
-                                                            className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border border-current/20", statusConfig.bg, statusConfig.color)}
-                                                        >
-                                                            <StatusIcon strokeWidth={2} className="w-3 h-3" />
-                                                            {statusConfig.label}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-10 py-6 text-right">
-                                                    <div className="flex items-center justify-end gap-3">
-                                                        {(order.status === 'shipped' || order.status === 'confirmed') && (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => handleReceiveOrder(order)}
-                                                                className="h-9 px-5 text-[10px] font-bold uppercase tracking-widest bg-success hover:bg-success/90 text-white rounded-lg shadow-lg shadow-success/10"
-                                                            >
-                                                                <PackageCheck strokeWidth={1.5} className="w-3.5 h-3.5 mr-2" />
-                                                                Réceptionner
-                                                            </Button>
-                                                        )}
-                                                        {order.status === 'pending' && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() => handleCancelOrder(order)}
-                                                                className="h-9 px-5 text-[10px] font-bold uppercase tracking-widest border-error text-error hover:bg-error/5 rounded-lg"
-                                                            >
-                                                                <XCircle strokeWidth={1.5} className="w-3.5 h-3.5 mr-2" />
-                                                                Annuler
-                                                            </Button>
-                                                        )}
-                                                        {(order.status === 'delivered' || order.status === 'cancelled') && (
-                                                            <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">
-                                                                {order.status === 'delivered' ? order.deliveredDate : '—'}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                {activeTab === 'preparations' && (
+                    <div className="space-y-4">
+                        {filteredPreparations.map((prep, idx) => (
+                            <motion.div
+                                key={prep.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white dark:bg-bg-secondary p-6 rounded-[2.5rem] border border-border/50"
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h4 className="text-2xl font-serif font-black italic text-text-primary">{prep.name}</h4>
+                                        <span className="text-[10px] font-black text-accent-gold uppercase tracking-widest mt-1 block opacity-60">{prep.type}</span>
+                                    </div>
+                                    <div className="bg-bg-tertiary px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest">
+                                        DLC {new Date(prep.dlc).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                                    </div>
+                                </div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-5xl font-serif font-black italic text-text-primary">{prep.quantity}</span>
+                                    <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] italic opacity-40">{prep.unit}</span>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
                 )}
             </div>
+
+            {/* Modals with Mobile Detection for BottomSheet behavior */}
+            <StockReceptionModal isOpen={isReceptionModalOpen} onClose={() => setIsReceptionModalOpen(false)} />
+            <CreatePreparationModal isOpen={isPreparationModalOpen} onClose={() => setIsPreparationModalOpen(false)} />
+            <StockTransferModal isOpen={isTransferModalOpen} onClose={() => setIsTransferModalOpen(false)} />
         </div>
     );
 }

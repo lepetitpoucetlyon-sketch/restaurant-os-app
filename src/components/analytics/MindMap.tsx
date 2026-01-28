@@ -111,7 +111,8 @@ export function MindMap() {
             .attr('cx', 2)
             .attr('cy', 2)
             .attr('r', 1)
-            .attr('fill', '#e5e7eb');
+            .attr('fill', 'currentColor')
+            .attr('class', 'text-border/40');
 
         svg.append('rect')
             .attr('width', '100%')
@@ -144,8 +145,8 @@ export function MindMap() {
             .attr('class', 'link-group');
 
         link.append('path')
-            .attr('stroke', '#00D764')
-            .attr('stroke-opacity', 0.2)
+            .attr('stroke', '#C5A059')
+            .attr('stroke-opacity', 0.4)
             .attr('stroke-width', d => d.strength * 4)
             .attr('fill', 'none')
             .attr('stroke-dasharray', '8,4');
@@ -154,7 +155,7 @@ export function MindMap() {
         const linkLabel = link.append('text')
             .attr('font-size', '10px')
             .attr('font-weight', '700')
-            .attr('fill', '#ADB5BD')
+            .attr('fill', '#6B7280')
             .attr('text-anchor', 'middle')
             .attr('dy', -5)
             .style('text-transform', 'uppercase')
@@ -182,8 +183,8 @@ export function MindMap() {
         // Node Circles
         node.append('circle')
             .attr('r', d => d.size)
-            .attr('fill', '#1A1A1A')
-            .attr('stroke', '#00D764')
+            .attr('fill', '#0F172A')
+            .attr('stroke', '#C5A059')
             .attr('stroke-width', 3)
             .attr('filter', 'url(#glow)');
 
@@ -193,7 +194,8 @@ export function MindMap() {
             .attr('text-anchor', 'middle')
             .attr('font-size', '14px')
             .attr('font-weight', '900')
-            .attr('fill', '#1A1A1A')
+            .attr('fill', 'currentColor')
+            .attr('class', 'text-text-primary')
             .style('text-transform', 'uppercase')
             .style('letter-spacing', '1px')
             .text(d => d.label);
@@ -201,7 +203,7 @@ export function MindMap() {
         // Node Icons (Placeholder simplified)
         node.append('circle')
             .attr('r', 4)
-            .attr('fill', '#00D764')
+            .attr('fill', '#C5A059')
             .attr('opacity', 0.8);
 
         simulation.on('tick', () => {
@@ -240,27 +242,27 @@ export function MindMap() {
     }, []);
 
     return (
-        <div className="flex bg-[#F8F9FA] h-[calc(100vh-70px)] -m-6 relative overflow-hidden">
+        <div className="flex bg-bg-tertiary h-[calc(100vh-70px)] -m-6 relative overflow-hidden">
             {/* Header / Infobar */}
             <div className="absolute top-8 left-8 z-20 space-y-4">
-                <div className="bg-[#1A1A1A] text-white p-6 rounded-[2rem] shadow-2xl border border-white/5 backdrop-blur-md">
+                <div className="bg-bg-primary/80 dark:bg-bg-secondary/80 text-text-primary p-6 rounded-[2rem] shadow-2xl border border-border/50 backdrop-blur-md">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 rounded-xl bg-[#00D764] flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center">
                             <Share2 className="w-4 h-4 text-white" />
                         </div>
                         <h1 className="text-xl font-black tracking-tighter uppercase">Cartographie Système</h1>
                     </div>
-                    <p className="text-[10px] font-bold text-[#00D764] uppercase tracking-widest px-1">Visualisation du Flux de Données</p>
+                    <p className="text-[10px] font-bold text-accent uppercase tracking-widest px-1">Visualisation du Flux de Données</p>
                 </div>
 
                 <div className="flex gap-2">
-                    <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-neutral-100 flex items-center gap-2 shadow-sm">
-                        <div className="w-2 h-2 rounded-full bg-[#00D764] animate-pulse" />
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Sync Active</span>
+                    <div className="bg-bg-primary/90 dark:bg-bg-tertiary/90 backdrop-blur-md px-4 py-2 rounded-xl border border-border/50 flex items-center gap-2 shadow-sm">
+                        <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Sync Active</span>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-neutral-100 flex items-center gap-2 shadow-sm">
-                        <Activity className="w-3 h-3 text-[#00D764]" />
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">RT Optimization</span>
+                    <div className="bg-bg-primary/90 dark:bg-bg-tertiary/90 backdrop-blur-md px-4 py-2 rounded-xl border border-border/50 flex items-center gap-2 shadow-sm">
+                        <Activity className="w-3 h-3 text-accent" />
+                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">RT Optimization</span>
                     </div>
                 </div>
             </div>
@@ -272,36 +274,36 @@ export function MindMap() {
 
             {/* Sidebar Details Tier */}
             <div className={cn(
-                "w-[400px] border-l border-neutral-100 bg-white shadow-[-20px_0_40px_rgba(0,0,0,0.02)] transition-transform duration-500 ease-in-out absolute right-0 top-0 bottom-0 z-30 p-10 flex flex-col",
+                "w-[400px] border-l border-border bg-bg-primary dark:bg-bg-secondary shadow-[-20px_0_40px_rgba(0,0,0,0.05)] transition-transform duration-500 ease-in-out absolute right-0 top-0 bottom-0 z-30 p-10 flex flex-col",
                 selectedNode ? "translate-x-0" : "translate-x-full"
             )}>
                 {selectedNode && (
                     <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-8 duration-500">
                         <div className="flex justify-between items-start mb-8">
-                            <div className="w-16 h-16 rounded-[1.5rem] bg-[#1A1A1A] flex items-center justify-center text-[#00D764] shadow-xl">
+                            <div className="w-16 h-16 rounded-[1.5rem] bg-text-primary flex items-center justify-center text-accent shadow-xl">
                                 <Zap className="w-8 h-8" />
                             </div>
                             <button
                                 onClick={() => setSelectedNode(null)}
-                                className="w-10 h-10 rounded-2xl bg-neutral-50 flex items-center justify-center text-neutral-400 hover:text-black transition-all"
+                                className="w-10 h-10 rounded-2xl bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-all"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <h2 className="text-3xl font-black text-[#1A1A1A] tracking-tighter mb-2">{selectedNode.label}</h2>
-                        <span className="text-[11px] font-bold text-[#00D764] uppercase tracking-[0.2em] mb-8">{selectedNode.group} subsystem</span>
+                        <h2 className="text-3xl font-black text-text-primary tracking-tighter mb-2">{selectedNode.label}</h2>
+                        <span className="text-[11px] font-bold text-accent uppercase tracking-[0.2em] mb-8">{selectedNode.group} subsystem</span>
 
-                        <p className="text-sm font-medium text-[#6C757D] leading-relaxed mb-10">
+                        <p className="text-sm font-medium text-text-muted leading-relaxed mb-10">
                             {selectedNode.description}
                         </p>
 
                         <div className="space-y-4 flex-1">
-                            <h4 className="text-[10px] font-black text-[#ADB5BD] uppercase tracking-widest mb-2 px-2">Kpis Live</h4>
+                            <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 px-2">Kpis Live</h4>
                             {selectedNode.metrics?.map((m, i) => (
-                                <div key={i} className="bg-neutral-50 p-5 rounded-[2rem] border border-neutral-50 flex justify-between items-center group hover:bg-[#E6F9EF] hover:border-[#00D764]/20 transition-all cursor-default">
-                                    <span className="text-[12px] font-bold text-neutral-400 group-hover:text-[#1A1A1A] transition-colors">{m.label}</span>
-                                    <span className="text-lg font-black text-[#1A1A1A]">{m.value}</span>
+                                <div key={i} className="bg-bg-tertiary p-5 rounded-[2rem] border border-border/50 flex justify-between items-center group hover:bg-accent/5 hover:border-accent/20 transition-all cursor-default">
+                                    <span className="text-[12px] font-bold text-text-muted group-hover:text-text-primary transition-colors">{m.label}</span>
+                                    <span className="text-lg font-black text-text-primary">{m.value}</span>
                                 </div>
                             ))}
 
@@ -313,31 +315,31 @@ export function MindMap() {
                             )}
                         </div>
 
-                        <button className="w-full h-16 bg-[#1A1A1A] rounded-[2rem] text-white font-black flex items-center justify-center gap-3 hover:bg-black transition-all shadow-2xl group">
+                        <button className="w-full h-16 bg-text-primary rounded-[2rem] text-white font-black flex items-center justify-center gap-3 hover:bg-black transition-all shadow-2xl group">
                             Dépendances Profondes
-                            <ArrowRight className="w-5 h-5 text-[#00D764] group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="w-5 h-5 text-accent group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
                 )}
             </div>
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-white/80 backdrop-blur-md p-2 rounded-[2rem] border border-neutral-100 shadow-xl z-20">
-                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-neutral-400 hover:text-black hover:bg-white transition-all">
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-bg-primary/80 dark:bg-bg-secondary/80 backdrop-blur-md p-2 rounded-[2rem] border border-border shadow-xl z-20">
+                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-tertiary transition-all">
                     <Maximize2 className="w-5 h-5" />
                 </button>
-                <div className="w-px h-6 bg-neutral-100" />
+                <div className="w-px h-6 bg-border" />
                 <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-300" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30" />
                     <input
                         type="text"
                         placeholder="Rechercher un module..."
-                        className="h-12 pl-12 pr-6 rounded-2xl bg-neutral-50 border-none text-sm placeholder:text-neutral-400 focus:ring-0 w-64"
+                        className="h-12 pl-12 pr-6 rounded-2xl bg-bg-tertiary border-none text-sm placeholder:text-text-muted/40 focus:ring-0 w-64"
                     />
                 </div>
-                <div className="w-px h-6 bg-neutral-100" />
-                <button className="bg-[#1A1A1A] text-white px-6 py-3 rounded-2xl font-black text-[12px] uppercase tracking-wider flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-[#00D764]" />
+                <div className="w-px h-6 bg-border" />
+                <button className="bg-text-primary text-white px-6 py-3 rounded-2xl font-black text-[12px] uppercase tracking-wider flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-accent" />
                     Vue 3D
                 </button>
             </div>

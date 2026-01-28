@@ -19,11 +19,15 @@ import {
     CalendarRange,
     X,
     ArrowRight,
-    Zap,
     Plus,
-    FileText
+    FileText,
+    Receipt,
+    Clock,
+    Printer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Modal } from "@/components/ui/Modal";
+import { useUI } from "@/context/UIContext";
 
 interface CommandItem {
     id: string;
@@ -33,28 +37,32 @@ interface CommandItem {
     action?: () => void;
     href?: string;
     category: 'navigation' | 'actions' | 'search';
+    section?: string;
     shortcut?: string;
 }
 
 const NAV_ITEMS: CommandItem[] = [
-    { id: 'dashboard', label: 'Tableau de bord', description: 'Vue d\'ensemble', icon: LayoutDashboard, href: '/', category: 'navigation', shortcut: '⌘1' },
-    { id: 'pos', label: 'Point de vente', description: 'Caisse & commandes', icon: Store, href: '/pos', category: 'navigation', shortcut: '⌘2' },
-    { id: 'floor', label: 'Plan de salle', description: 'Tables & placement', icon: Map, href: '/floor-plan', category: 'navigation', shortcut: '⌘3' },
-    { id: 'reservations', label: 'Réservations', description: 'Carnet & CRM', icon: CalendarDays, href: '/reservations', category: 'navigation', shortcut: '⌘4' },
-    { id: 'inventory', label: 'Stocks & Inventaire', description: 'Approvisionnement', icon: Package, href: '/inventory', category: 'navigation', shortcut: '⌘5' },
-    { id: 'kds', label: 'Cuisine (KDS)', description: 'Production temps réel', icon: ChefHat, href: '/kds', category: 'navigation', shortcut: '⌘6' },
-    { id: 'staff', label: 'Ressources Humaines', description: 'Équipe & paie', icon: Users, href: '/staff', category: 'navigation' },
-    { id: 'planning', label: 'Planning', description: 'Shifts & horaires', icon: CalendarRange, href: '/planning', category: 'navigation' },
-    { id: 'haccp', label: 'HACCP & Qualité', description: 'Conformité', icon: ClipboardCheck, href: '/haccp', category: 'navigation' },
-    { id: 'accounting', label: 'Finance & Compta', description: 'Pilotage financier', icon: Calculator, href: '/accounting', category: 'navigation' },
-    { id: 'analytics', label: 'Analyses', description: 'Rapports & KPIs', icon: BarChart3, href: '/analytics', category: 'navigation' },
-    { id: 'system', label: 'Ecosystème IA', description: 'Cartographie système', icon: Sparkles, href: '/system-map', category: 'navigation' },
+    // Navigation items kept for reference but hidden from main view as requested
+    { id: 'dashboard', label: 'Tableau de bord', description: 'Vue d\'ensemble', icon: LayoutDashboard, href: '/', category: 'navigation', section: 'Navigation', shortcut: '⌘1' },
 ];
 
 const ACTION_ITEMS: CommandItem[] = [
-    { id: 'new-order', label: 'Nouvelle commande', description: 'Créer un ticket', icon: Plus, href: '/pos', category: 'actions' },
-    { id: 'new-reservation', label: 'Nouvelle réservation', description: 'Ajouter au carnet', icon: CalendarDays, href: '/reservations', category: 'actions' },
-    { id: 'export-report', label: 'Exporter rapport', description: 'Télécharger PDF', icon: FileText, category: 'actions' },
+    // Création Rapide
+    { id: 'new-order', label: 'Nouvelle Commande', description: 'Créer un ticket POS', icon: Receipt, href: '/pos', category: 'actions', section: 'Création Rapide', shortcut: '⌘N' },
+    { id: 'new-reservation', label: 'Nouvelle Réservation', description: 'Ajouter au carnet', icon: CalendarDays, href: '/reservations?new=true', category: 'actions', section: 'Création Rapide', shortcut: '⌘R' },
+    { id: 'new-client', label: 'Nouveau Client', description: 'Fiche CRM', icon: Users, href: '/crm?new=true', category: 'actions', section: 'Création Rapide' },
+    { id: 'new-staff', label: 'Recrutement / Staff', description: 'Ajouter un collaborateur', icon: Users, href: '/staff?new=true', category: 'actions', section: 'Création Rapide' },
+    { id: 'new-product', label: 'Référencer Produit', description: 'Ajout catalogue', icon: Package, href: '/inventory?action=add', category: 'actions', section: 'Création Rapide' },
+
+    // Opérations
+    { id: 'start-shift', label: 'Ouvrir Service', description: 'Début de shift', icon: Clock, category: 'actions', section: 'Opérations' },
+    { id: 'end-shift', label: 'Clôture Z', description: 'Fin de journée', icon: Calculator, category: 'actions', section: 'Opérations' },
+    { id: 'inventory-check', label: 'Inventaire Éclair', description: 'Scan de stock', icon: Package, category: 'actions', section: 'Opérations' },
+    { id: 'print-menu', label: 'Imprimer Menu', description: 'Carte du jour', icon: Printer, category: 'actions', section: 'Opérations' },
+
+    // Finance & Reports
+    { id: 'export-report', label: 'Rapport Financier', description: 'Export PDF J-1', icon: FileText, category: 'actions', section: 'Finance & Analyses' },
+    { id: 'view-analytics', label: 'Live Analytics', description: 'Performance temps réel', icon: BarChart3, href: '/analytics', category: 'actions', section: 'Finance & Analyses' },
 ];
 
 interface CommandModalProps {
@@ -63,12 +71,15 @@ interface CommandModalProps {
 }
 
 export function CommandModal({ isOpen, onClose }: CommandModalProps) {
+    const { theme } = useUI();
+    const isDark = theme === 'dark';
     const router = useRouter();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
 
-    const allItems = [...NAV_ITEMS, ...ACTION_ITEMS];
+    // Only show ACTION_ITEMS by default, unless searching matches navigation
+    const allItems = [...ACTION_ITEMS];
 
     const filteredItems = searchTerm
         ? allItems.filter(item =>
@@ -77,8 +88,13 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
         )
         : allItems;
 
-    const navItems = filteredItems.filter(i => i.category === 'navigation');
-    const actionItems = filteredItems.filter(i => i.category === 'actions');
+    // Group items by section
+    const groupedItems = filteredItems.reduce((acc, item) => {
+        const section = item.section || 'Actions';
+        if (!acc[section]) acc[section] = [];
+        acc[section].push(item);
+        return acc;
+    }, {} as Record<string, CommandItem[]>);
 
     // Focus input on open
     useEffect(() => {
@@ -103,13 +119,7 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
             } else if (e.key === 'Enter') {
                 e.preventDefault();
                 const item = filteredItems[selectedIndex];
-                if (item?.href) {
-                    router.push(item.href);
-                    onClose();
-                } else if (item?.action) {
-                    item.action();
-                    onClose();
-                }
+                if (item) handleItemClick(item);
             } else if (e.key === 'Escape') {
                 onClose();
             }
@@ -128,173 +138,144 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div
-            className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh] px-4"
-            onClick={onClose}
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            size="lg"
+            className="p-0 border-none bg-transparent"
         >
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <div className={cn(
+                "relative w-full border rounded-[2.5rem] overflow-hidden flex flex-col group/modal transition-colors duration-500",
+                "bg-bg-primary border-border shadow-[0_0_100px_rgba(0,0,0,0.8),0_0_50px_rgba(197,160,89,0.1)]"
+            )}>
+                {/* Visual Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-accent-gold/5 blur-3xl pointer-events-none" />
 
-            {/* Modal */}
-            <div
-                className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Search Input */}
-                <div className="flex items-center gap-4 p-6 border-b border-neutral-100">
-                    <Search className="w-5 h-5 text-[#ADB5BD]" />
+                {/* Spotlight Search Header */}
+                <div className="flex items-center gap-6 p-10 border-b border-border/10 relative z-10 transition-colors">
+                    <div className="w-14 h-14 rounded-full bg-accent-gold/10 flex items-center justify-center text-accent-gold border border-accent-gold/20 shadow-glow">
+                        <Search strokeWidth={1.5} className="w-6 h-6" />
+                    </div>
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Rechercher une action, un module..."
+                        placeholder="QUELLE ACTION EXÉCUTER ?"
                         value={searchTerm}
                         onChange={e => {
                             setSearchTerm(e.target.value);
                             setSelectedIndex(0);
                         }}
-                        className="flex-1 text-lg font-medium outline-none placeholder:text-[#CED4DA]"
+                        className="flex-1 bg-transparent text-text-primary text-2xl font-serif font-black italic outline-none tracking-tighter transition-colors placeholder:text-text-muted/20"
                     />
-                    <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 rounded-lg">
-                        <span className="text-[10px] font-black text-[#ADB5BD]">ESC</span>
+                    <div className="flex items-center gap-3 px-4 py-2 border border-border bg-bg-tertiary/40 rounded-2xl transition-colors">
+                        <span className="text-[11px] font-black tracking-[0.2em] text-text-muted/60">ECHAP</span>
                     </div>
                 </div>
 
                 {/* Results */}
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="max-h-[500px] overflow-y-auto elegant-scrollbar p-6 space-y-8 relative z-10">
                     {filteredItems.length === 0 ? (
-                        <div className="p-8 text-center">
-                            <p className="text-[#ADB5BD] font-bold">Aucun résultat pour "{searchTerm}"</p>
+                        <div className="py-20 text-center">
+                            <p className={cn(
+                                "font-serif italic text-2xl transition-colors",
+                                isDark ? "text-white/20" : "text-black/20"
+                            )}>Aucune action trouvée pour "{searchTerm}"</p>
                         </div>
                     ) : (
-                        <>
-                            {/* Navigation Section */}
-                            {navItems.length > 0 && (
-                                <div className="p-4">
-                                    <p className="text-[10px] font-black text-[#ADB5BD] uppercase tracking-widest px-3 mb-2">
-                                        Navigation
+                        Object.entries(groupedItems).map(([section, items], sectionIndex) => (
+                            <div key={section} className="space-y-3">
+                                <div className="flex items-center gap-4 px-4 mb-4 mt-2">
+                                    <div className="w-8 h-0.5 bg-accent-gold rounded-full" />
+                                    <p className="text-[11px] font-black text-accent-gold uppercase tracking-[0.4em]">
+                                        {section}
                                     </p>
-                                    {navItems.map((item, i) => {
-                                        const globalIndex = filteredItems.indexOf(item);
-                                        const Icon = item.icon;
-                                        return (
-                                            <button
-                                                key={item.id}
-                                                onClick={() => handleItemClick(item)}
-                                                onMouseEnter={() => setSelectedIndex(globalIndex)}
-                                                className={cn(
-                                                    "w-full flex items-center gap-4 p-3 rounded-xl transition-all",
-                                                    selectedIndex === globalIndex
-                                                        ? "bg-[#E6F9EF] text-[#1A1A1A]"
-                                                        : "hover:bg-neutral-50"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-xl flex items-center justify-center",
-                                                    selectedIndex === globalIndex
-                                                        ? "bg-[#00D764] text-white"
-                                                        : "bg-neutral-100 text-[#495057]"
-                                                )}>
-                                                    <Icon className="w-5 h-5" />
-                                                </div>
-                                                <div className="flex-1 text-left">
-                                                    <p className="font-bold text-[#1A1A1A]">{item.label}</p>
-                                                    {item.description && (
-                                                        <p className="text-[11px] text-[#ADB5BD]">{item.description}</p>
-                                                    )}
-                                                </div>
-                                                {item.shortcut && (
-                                                    <span className="text-[10px] font-bold text-[#ADB5BD] bg-neutral-100 px-2 py-1 rounded">
-                                                        {item.shortcut}
-                                                    </span>
-                                                )}
-                                                <ArrowRight className={cn(
-                                                    "w-4 h-4 transition-all",
-                                                    selectedIndex === globalIndex
-                                                        ? "text-[#00D764] translate-x-0 opacity-100"
-                                                        : "opacity-0 -translate-x-2"
-                                                )} />
-                                            </button>
-                                        );
-                                    })}
                                 </div>
-                            )}
-
-                            {/* Actions Section */}
-                            {actionItems.length > 0 && (
-                                <div className="p-4 border-t border-neutral-100">
-                                    <p className="text-[10px] font-black text-[#ADB5BD] uppercase tracking-widest px-3 mb-2">
-                                        Actions Rapides
-                                    </p>
-                                    {actionItems.map((item) => {
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {items.map((item) => {
                                         const globalIndex = filteredItems.indexOf(item);
                                         const Icon = item.icon;
+                                        const isActive = selectedIndex === globalIndex;
                                         return (
                                             <button
                                                 key={item.id}
                                                 onClick={() => handleItemClick(item)}
                                                 onMouseEnter={() => setSelectedIndex(globalIndex)}
                                                 className={cn(
-                                                    "w-full flex items-center gap-4 p-3 rounded-xl transition-all",
-                                                    selectedIndex === globalIndex
-                                                        ? "bg-[#1A1A1A] text-white"
-                                                        : "hover:bg-neutral-50"
+                                                    "group flex items-center gap-5 p-4 rounded-2.5xl transition-all duration-500 border",
+                                                    isActive
+                                                        ? "bg-accent-gold border-transparent shadow-glow translate-x-1"
+                                                        : "bg-white/5 border-transparent opacity-60 hover:opacity-100"
                                                 )}
                                             >
                                                 <div className={cn(
-                                                    "w-10 h-10 rounded-xl flex items-center justify-center",
-                                                    selectedIndex === globalIndex
-                                                        ? "bg-[#00D764]"
-                                                        : "bg-neutral-100"
+                                                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-700",
+                                                    isActive ? "bg-white/20 text-white" : (isDark ? "bg-black/40 text-accent-gold border border-accent-gold/10" : "bg-white text-accent-gold border border-accent-gold/20 shadow-sm")
                                                 )}>
-                                                    <Icon className={cn(
-                                                        "w-5 h-5",
-                                                        selectedIndex === globalIndex ? "text-white" : "text-[#495057]"
-                                                    )} />
+                                                    <Icon strokeWidth={1.5} className="w-6 h-6" />
                                                 </div>
                                                 <div className="flex-1 text-left">
-                                                    <p className={cn("font-bold", selectedIndex === globalIndex ? "text-white" : "text-[#1A1A1A]")}>
+                                                    <p className={cn("font-serif font-black italic text-md leading-none transition-colors", isActive ? "text-black hidden-text-shadow" : "text-text-primary")}>
                                                         {item.label}
                                                     </p>
-                                                    {item.description && (
-                                                        <p className={cn("text-[11px]", selectedIndex === globalIndex ? "text-white/70" : "text-[#ADB5BD]")}>
-                                                            {item.description}
-                                                        </p>
-                                                    )}
+                                                    <p className={cn("text-[10px] font-black uppercase tracking-widest mt-2", isActive ? "text-black/60" : "text-text-muted/60")}>
+                                                        {item.description}
+                                                    </p>
                                                 </div>
-                                                <Zap className={cn(
-                                                    "w-4 h-4",
-                                                    selectedIndex === globalIndex ? "text-[#00D764]" : "text-[#ADB5BD]"
+                                                <ArrowRight className={cn(
+                                                    "w-5 h-5 transition-all duration-700",
+                                                    isActive ? "text-black translate-x-2" : "text-text-muted/20"
                                                 )} />
                                             </button>
                                         );
                                     })}
                                 </div>
-                            )}
-                        </>
+                            </div>
+                        ))
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="p-4 border-t border-neutral-100 bg-neutral-50/50 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                            <span className="text-[9px] font-bold text-[#ADB5BD] bg-white border px-1.5 py-0.5 rounded">↑↓</span>
-                            <span className="text-[10px] text-[#ADB5BD]">Naviguer</span>
+                {/* Footer Center - Operational Protocol */}
+                <div className={cn(
+                    "p-8 border-t flex items-center justify-between relative z-10 shrink-0 transition-colors",
+                    isDark ? "border-white/5 bg-white/[0.02]" : "border-black/5 bg-black/[0.02]"
+                )}>
+                    <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-3">
+                            <div className={cn(
+                                "px-2 py-1 border rounded-lg text-[9px] font-black transition-colors",
+                                isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-black/40"
+                            )}>↑↓</div>
+                            <span className={cn(
+                                "text-[10px] font-black uppercase tracking-widest transition-colors",
+                                isDark ? "text-white/20" : "text-black/20"
+                            )}>Parcourir</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-[9px] font-bold text-[#ADB5BD] bg-white border px-1.5 py-0.5 rounded">↵</span>
-                            <span className="text-[10px] text-[#ADB5BD]">Sélectionner</span>
+                        <div className="flex items-center gap-3">
+                            <div className={cn(
+                                "px-2 py-1 border rounded-lg text-[9px] font-black transition-colors",
+                                isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-black/40"
+                            )}>↵</div>
+                            <span className={cn(
+                                "text-[10px] font-black uppercase tracking-widest transition-colors",
+                                isDark ? "text-white/20" : "text-black/20"
+                            )}>Activer</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Command className="w-3 h-3 text-[#00D764]" />
-                        <span className="text-[10px] font-black text-[#ADB5BD] uppercase tracking-wider">Command Center</span>
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col text-right">
+                            <span className="text-[9px] font-black text-accent-gold uppercase tracking-[0.3em]">IA Maître</span>
+                            <span className={cn(
+                                "text-[7px] font-black uppercase tracking-[0.5em] mt-1 transition-colors",
+                                isDark ? "text-white/20" : "text-black/20"
+                            )}>Version 2.5 Alpha</span>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-accent-gold" />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

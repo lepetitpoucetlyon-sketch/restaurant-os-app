@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useAuth, ROLE_LABELS } from "@/context/AuthContext";
-import { Delete, LogIn, Fingerprint, ShieldCheck, ChevronLeft } from "lucide-react";
+import { useUI } from "@/context/UIContext";
+import { Delete, LogIn, Fingerprint, ShieldCheck, ChevronLeft, RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PinLogin() {
-    const { login, loginAsUser, users } = useAuth();
+    const { login, loginAsUser, users, resetUsers, isAuthLoading } = useAuth();
+    const { toggleTheme } = useUI();
     const [pin, setPin] = useState("");
     const [error, setError] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [isResetting, setIsResetting] = useState(false);
 
     const handleDigit = (digit: string) => {
         if (pin.length < 4) {
@@ -23,13 +26,13 @@ export function PinLogin() {
         setError(false);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (pin.length === 4 && selectedUserId) {
             // Find the selected user and verify their PIN matches
             const selectedUser = users.find(u => u.id === selectedUserId);
             if (selectedUser && selectedUser.pin === pin) {
                 // PIN matches the selected user - log them in
-                loginAsUser(selectedUserId);
+                await loginAsUser(selectedUserId);
             } else {
                 // Wrong PIN for the selected user
                 setError(true);
@@ -55,76 +58,114 @@ export function PinLogin() {
         setError(false);
     };
 
+    const handleSystemReset = async () => {
+        setIsResetting(true);
+        try {
+            await resetUsers();
+            // Optional: force reload if live query doesn't update immediately
+            // window.location.reload(); 
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
     const digits = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "delete", "0", "submit"];
     const selectedUser = users.find(u => u.id === selectedUserId);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B] relative overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-bg-primary relative overflow-hidden transition-colors duration-500">
             {/* Background Aesthetic */}
-            <div className="absolute top-0 left-0 w-full h-full">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#00D764] rounded-full blur-[150px] opacity-10" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#00D764] rounded-full blur-[150px] opacity-10" />
-                <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#FFFFFF 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[150px] opacity-10" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[150px] opacity-10" />
+                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] bg-[radial-gradient(#000000_1px,transparent_1px)] dark:bg-[radial-gradient(#FFFFFF_1px,transparent_1px)] [background-size:40px_40px]" />
             </div>
 
             <div className="w-full max-w-2xl z-10 px-6">
                 {/* Branding */}
                 <div className="text-center mb-12">
-                    <div className="w-16 h-16 bg-[#1A1A1A] rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-2xl">
-                        <div className="w-4 h-4 rounded-full bg-[#00D764] animate-pulse" />
-                    </div>
-                    <h1 className="text-4xl font-black text-white tracking-tighter mb-2">Executive Access</h1>
-                    <p className="text-[11px] font-bold text-[#ADB5BD] uppercase tracking-[0.3em]">Identification du Personnel</p>
+                    <button
+                        onClick={toggleTheme}
+                        className="w-16 h-16 bg-bg-tertiary rounded-2xl flex items-center justify-center mx-auto mb-6 border border-border shadow-2xl backdrop-blur-md cursor-pointer hover:bg-bg-tertiary/80 transition-all group"
+                    >
+                        <div className="w-4 h-4 rounded-full bg-accent animate-pulse shadow-[0_0_20px_#C5A059_80]" />
+                    </button>
+                    <h1 className="text-4xl font-black text-text-primary tracking-tighter mb-2 font-serif italic">Accès Exécutif</h1>
                 </div>
 
                 {/* Glass Card */}
-                <div className="bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-[3rem] p-10 shadow-2xl">
-                    {!selectedUserId ? (
+                <div className="bg-bg-secondary/80 backdrop-blur-xl border border-border rounded-[3rem] p-10 shadow-premium transition-all duration-500 min-h-[400px] flex flex-col justify-center">
+                    {isAuthLoading ? (
+                        <div className="flex flex-col items-center justify-center py-12 animate-pulse">
+                            <RefreshCw className="w-10 h-10 text-accent animate-spin mb-6" />
+                            <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Initialisation de la liaison sécurisée...</p>
+                        </div>
+                    ) : !selectedUserId ? (
                         <>
-                            {/* User Selection Grid */}
-                            <div className="grid grid-cols-3 gap-4 mb-6">
-                                {users.map(user => (
+                            {users.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 animate-in fade-in duration-700">
+                                    <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center mb-6">
+                                        <AlertTriangle className="w-8 h-8 text-error" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-text-primary mb-2">Liaison Base de Donnée Interrompue</h3>
+                                    <p className="text-xs text-text-muted mb-8 max-w-xs text-center leading-relaxed">
+                                        Le module d'identification n'a pas pu récupérer la liste du personnel. Une réinitialisation manuelle du nœud local est requise.
+                                    </p>
                                     <button
-                                        key={user.id}
-                                        onClick={() => handleQuickLogin(user.id)}
-                                        className={cn(
-                                            "flex flex-col items-center gap-3 p-4 rounded-[2rem] transition-all duration-500",
-                                            "bg-white/5 text-[#ADB5BD] hover:bg-white/10 hover:scale-105"
-                                        )}
+                                        onClick={handleSystemReset}
+                                        disabled={isResetting}
+                                        className="flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-[#B8934C] transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                                     >
-                                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black bg-white/5">
-                                            {user.name.charAt(0)}
-                                        </div>
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-center leading-tight">
-                                            {user.name.split(' ')[0]}
-                                            <br />
-                                            {user.name.split(' ')[1]}
-                                        </span>
-                                        <span className="text-[8px] font-bold text-[#00D764]/70 uppercase tracking-wider">
-                                            {ROLE_LABELS[user.role]}
-                                        </span>
+                                        <RefreshCw className={cn("w-4 h-4", isResetting && "animate-spin")} />
+                                        {isResetting ? "Initialisation..." : "Initialiser le Système"}
                                     </button>
-                                ))}
-                            </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-4 mb-6">
+                                    {users.map(user => (
+                                        <button
+                                            key={user.id}
+                                            onClick={() => handleQuickLogin(user.id)}
+                                            className={cn(
+                                                "flex flex-col items-center gap-3 p-4 rounded-[2rem] transition-all duration-500 border border-border",
+                                                "bg-bg-tertiary hover:bg-bg-tertiary/80 hover:border-accent/30 hover:scale-105 hover:shadow-lg group"
+                                            )}
+                                        >
+                                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black bg-bg-primary text-text-primary group-hover:text-accent group-hover:bg-bg-primary transition-colors shadow-inner border border-border">
+                                                {user.name.charAt(0)}
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-center leading-tight text-text-muted group-hover:text-text-primary transition-colors">
+                                                {user.name.split(' ')[0]}
+                                                <br />
+                                                {user.name.split(' ')[1]}
+                                            </span>
+                                            <span className="text-[8px] font-bold text-accent/50 group-hover:text-accent uppercase tracking-wider transition-colors">
+                                                {ROLE_LABELS[user.role]}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </>
                     ) : (
+
                         <>
                             {/* Back Button & Selected User */}
                             <div className="flex items-center justify-between mb-8">
                                 <button
                                     onClick={handleBackToSelection}
-                                    className="flex items-center gap-2 text-[#ADB5BD] hover:text-white transition-colors"
+                                    className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors group"
                                 >
-                                    <ChevronLeft className="w-5 h-5" />
-                                    <span className="text-xs font-bold uppercase">Retour</span>
+                                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                                    <span className="text-xs font-bold uppercase tracking-wider">Retour</span>
                                 </button>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white font-bold">
+                                    <div className="w-10 h-10 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-primary font-bold border border-border">
                                         {selectedUser?.name.charAt(0)}
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-white font-bold text-sm">{selectedUser?.name}</p>
-                                        <p className="text-[9px] text-[#00D764] font-bold uppercase">
+                                        <p className="text-text-primary font-bold text-sm leading-none">{selectedUser?.name}</p>
+                                        <p className="text-[9px] text-accent font-bold uppercase mt-1">
                                             {selectedUser ? ROLE_LABELS[selectedUser.role] : ''}
                                         </p>
                                     </div>
@@ -137,33 +178,31 @@ export function PinLogin() {
                                     <div
                                         key={i}
                                         className={cn(
-                                            "w-16 h-16 rounded-[1.5rem] border flex items-center justify-center text-2xl transition-all duration-500",
+                                            "w-14 h-16 rounded-2xl border flex items-center justify-center text-2xl transition-all duration-300",
                                             error
-                                                ? "border-red-500/50 bg-red-500/10 animate-shake"
+                                                ? "border-error/50 bg-error/10 animate-shake"
                                                 : pin.length > i
-                                                    ? "border-[#00D764] bg-[#00D764]/10"
-                                                    : "border-white/10 bg-white/5"
+                                                    ? "border-accent bg-accent/20 shadow-glow-accent"
+                                                    : "border-border bg-bg-tertiary"
                                         )}
                                     >
-                                        {pin.length > i ? (
-                                            <div className="w-3 h-3 rounded-full bg-[#00D764] shadow-[0_0_10px_#00D764]" />
-                                        ) : (
-                                            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                                        {pin.length > i && (
+                                            <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_10px_#C5A059]" />
                                         )}
                                     </div>
                                 ))}
                             </div>
 
                             {/* Aesthetic Keypad */}
-                            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+                            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto w-full px-4">
                                 {digits.map((digit, i) => (
                                     digit === "delete" ? (
                                         <button
                                             key={i}
                                             onClick={handleDelete}
-                                            className="h-16 rounded-2xl bg-white/5 text-[#ADB5BD] flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all"
+                                            className="h-20 w-full rounded-[2rem] bg-transparent border border-border text-text-muted flex items-center justify-center hover:bg-bg-tertiary hover:text-text-primary hover:border-border active:scale-95 transition-all group"
                                         >
-                                            <Delete className="w-6 h-6" />
+                                            <Delete className="w-6 h-6 group-hover:scale-110 transition-transform" />
                                         </button>
                                     ) : digit === "submit" ? (
                                         <button
@@ -171,10 +210,10 @@ export function PinLogin() {
                                             onClick={handleSubmit}
                                             disabled={pin.length !== 4}
                                             className={cn(
-                                                "h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl",
+                                                "h-20 w-full rounded-[2rem] flex items-center justify-center transition-all duration-300 border",
                                                 pin.length === 4
-                                                    ? "bg-[#00D764] text-white hover:bg-[#00B956] shadow-[#00D764]/20"
-                                                    : "bg-white/5 text-[#333] cursor-not-allowed"
+                                                    ? "bg-accent border-accent text-white hover:bg-[#B8934C] shadow-glow-accent cursor-pointer hover:scale-105"
+                                                    : "bg-transparent border-border text-text-muted/20 cursor-not-allowed"
                                             )}
                                         >
                                             <LogIn className="w-6 h-6" />
@@ -183,20 +222,9 @@ export function PinLogin() {
                                         <button
                                             key={i}
                                             onClick={() => handleDigit(digit)}
-                                            className="h-16 rounded-2xl bg-white/5 text-white text-2xl font-black hover:bg-white/10 active:scale-95 transition-all flex flex-col items-center justify-center"
+                                            className="h-20 w-full rounded-[2rem] bg-bg-tertiary border border-border text-text-primary text-3xl font-bold hover:bg-bg-secondary hover:border-accent/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center shadow-sm"
                                         >
                                             {digit}
-                                            <span className="text-[8px] opacity-20 font-bold tracking-tighter">
-                                                {digit === "1" && "SEC"}
-                                                {digit === "2" && "ABC"}
-                                                {digit === "3" && "DEF"}
-                                                {digit === "4" && "GHI"}
-                                                {digit === "5" && "JKL"}
-                                                {digit === "6" && "MNO"}
-                                                {digit === "7" && "PQRS"}
-                                                {digit === "8" && "TUV"}
-                                                {digit === "9" && "WXYZ"}
-                                            </span>
                                         </button>
                                     )
                                 ))}
@@ -206,21 +234,19 @@ export function PinLogin() {
                 </div>
 
                 {/* Security Footer */}
-                <div className="mt-12 flex flex-col items-center gap-6">
-                    <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/5 backdrop-blur-md">
-                        <ShieldCheck className="w-4 h-4 text-[#00D764]" />
-                        <span className="text-[10px] font-bold text-[#ADB5BD] uppercase tracking-[0.2em]">Système de Sécurité Chiffré</span>
+                <div className="mt-8 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-3 bg-bg-tertiary px-5 py-2.5 rounded-full border border-border backdrop-blur-md">
+                        <ShieldCheck className="w-3.5 h-3.5 text-accent" />
+                        <span className="text-[9px] font-bold text-text-muted uppercase tracking-[0.2em]">Sécurité Chiffrée</span>
                     </div>
 
-                    <div className="flex gap-4">
-                        <button className="flex items-center gap-2 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all text-[#ADB5BD] hover:text-white">
-                            <Fingerprint className="w-5 h-5" />
-                            <span className="text-[10px] font-black uppercase">Bio-Access</span>
-                        </button>
-                    </div>
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-text-muted hover:text-text-primary transition-colors group">
+                        <Fingerprint className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider">Accès Biométrique</span>
+                    </button>
 
-                    <p className="text-[9px] font-bold text-[#333] text-center mt-4">
-                        CODES PIN : ADMIN 1234 | MANAGER 5678 | SERVEUR 0000 | CHEF 9999 | BARMAN 1111 | RESP.SALLE 2222
+                    <p className="text-[9px] font-black text-text-muted/40 text-center mt-4">
+                        CODES PIN : TOUS LES COMPTES 0000
                     </p>
                 </div>
             </div>

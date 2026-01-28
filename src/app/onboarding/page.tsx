@@ -5,6 +5,7 @@ import { useAuth, UserRole, ROLE_LABELS } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
 import {
     BookOpen,
     Sparkles,
@@ -30,7 +31,11 @@ import {
     Building2,
     Key,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    MessageSquare,
+    Send,
+    Lock,
+    X
 } from "lucide-react";
 
 type TabType = 'check-in' | 'training' | 'personal-space' | 'documents';
@@ -40,6 +45,14 @@ export default function OnboardingPage() {
     const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<TabType>('check-in');
     const [selectedPoste, setSelectedPoste] = useState<UserRole | null>(currentUser?.role || null);
+
+    // Feature States
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [showTrainingModal, setShowTrainingModal] = useState(false);
+    const [selectedModule, setSelectedModule] = useState<any>(null);
+    const [showRHModal, setShowRHModal] = useState(false);
+    const [isShiftStarted, setIsShiftStarted] = useState(false);
+    const [newPin, setNewPin] = useState("");
 
     const stationChecklists: Record<string, string[]> = {
         'kitchen_chef': [
@@ -90,31 +103,11 @@ export default function OnboardingPage() {
     ];
 
     return (
-        <div className="flex flex-1 -m-8 flex-col bg-bg-primary min-h-screen overflow-hidden">
-            {/* Header Area */}
-            <div className="bg-white border-b border-border px-10 py-8">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-serif font-semibold text-text-primary tracking-tight">Prise de Poste & Excellence</h1>
-                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
-                            <Sparkles strokeWidth={1.5} className="w-3.5 h-3.5 text-accent" />
-                            Bonjour {currentUser?.name} • Vers l'excellence opérationnelle
-                        </p>
-                    </div>
+        <div className="flex flex-1 h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] -m-4 md:-m-8 flex-col bg-bg-primary overflow-hidden pb-20 md:pb-0">
 
-                    <div className="flex items-center gap-3">
-                        <div className="text-right mr-4">
-                            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Temps de Service</p>
-                            <p className="text-sm font-mono font-medium text-text-primary mt-0.5">02h 14m</p>
-                        </div>
-                        <Button className="btn-elegant-primary h-12 px-8 shadow-lg shadow-accent/10">
-                            Connecter le Service
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Tab Switcher */}
-                <div className="flex items-center gap-2 mt-10">
+            {/* Minimal Header & Navigation */}
+            <div className="bg-bg-secondary border-b border-border px-10 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
+                <div className="flex items-center gap-2">
                     {[
                         { id: 'check-in', label: 'Prise de Poste', icon: Briefcase },
                         { id: 'training', label: 'Formation & Culture', icon: BookOpen },
@@ -125,25 +118,34 @@ export default function OnboardingPage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as TabType)}
                             className={cn(
-                                "flex items-center gap-3 px-6 py-3 rounded-xl font-bold text-[12px] uppercase tracking-wider transition-all duration-300",
+                                "flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all duration-300",
                                 activeTab === tab.id
                                     ? "bg-bg-tertiary text-accent border border-accent/20 shadow-sm"
                                     : "text-text-muted hover:text-text-primary hover:bg-bg-tertiary/10"
                             )}
                         >
-                            <tab.icon strokeWidth={1.5} className="w-4 h-4" />
+                            <tab.icon strokeWidth={1.5} className="w-3.5 h-3.5" />
                             {tab.label}
                         </button>
                     ))}
                 </div>
-            </div>
 
+                <div className="flex items-center gap-4">
+                    <div className="hidden md:block text-right">
+                        <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Service</p>
+                        <p className="text-xs font-mono font-medium text-text-primary">02h 14m</p>
+                    </div>
+                    <Button className="btn-elegant-primary h-9 px-6 text-[10px] uppercase tracking-widest shadow-lg shadow-accent/10">
+                        Connecter
+                    </Button>
+                </div>
+            </div>
             <div className="flex-1 overflow-auto p-12 elegant-scrollbar">
                 {activeTab === 'check-in' && (
                     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* Daily Vision & Briefing */}
                         <div className="bg-bg-tertiary/30 rounded-2xl border border-border p-8 flex items-start gap-8">
-                            <div className="w-16 h-16 bg-white rounded-2xl border border-border flex items-center justify-center shrink-0 shadow-sm">
+                            <div className="w-16 h-16 bg-bg-secondary rounded-2xl border border-border flex items-center justify-center shrink-0 shadow-sm">
                                 <Sparkles strokeWidth={1.5} className="w-8 h-8 text-accent" />
                             </div>
                             <div className="flex-1">
@@ -173,8 +175,8 @@ export default function OnboardingPage() {
                                             className={cn(
                                                 "flex items-center justify-between p-5 rounded-xl border transition-all duration-300 text-left",
                                                 selectedPoste === role
-                                                    ? "bg-white border-accent shadow-xl shadow-accent/5 ring-1 ring-accent/20"
-                                                    : "bg-white border-border hover:border-text-secondary/30 text-text-muted"
+                                                    ? "bg-bg-secondary border-accent shadow-xl shadow-accent/5 ring-1 ring-accent/20"
+                                                    : "bg-bg-secondary border-border hover:border-text-secondary/30 text-text-muted"
                                             )}
                                         >
                                             <div className="flex items-center gap-4">
@@ -205,7 +207,7 @@ export default function OnboardingPage() {
                                         Préparation Requise
                                     </span>
                                 </div>
-                                <div className="bg-white rounded-2xl border border-border shadow-sm p-8 space-y-4">
+                                <div className="bg-bg-secondary rounded-2xl border border-border shadow-sm p-8 space-y-4">
                                     {getChecklist(selectedPoste || '').map((task, idx) => (
                                         <div key={idx} className="group flex items-start gap-4 p-4 rounded-xl hover:bg-bg-tertiary/20 cursor-pointer transition-all border border-transparent hover:border-border/50">
                                             <div className="w-6 h-6 rounded-lg border-2 border-border flex items-center justify-center group-hover:border-accent transition-colors shrink-0 mt-0.5">
@@ -224,30 +226,45 @@ export default function OnboardingPage() {
                                             </div>
                                         </div>
                                     ))}
-                                    <Button className="w-full h-14 bg-text-primary hover:bg-black text-white rounded-xl font-bold text-[13px] uppercase tracking-[0.2em] shadow-xl shadow-text-primary/10 mt-6">
-                                        Valider ma Prise de Poste
+                                    <Button
+                                        onClick={() => {
+                                            const loading = showToast("Démarrage du service...", "info");
+                                            setTimeout(() => {
+                                                setIsShiftStarted(true);
+                                                showToast("Service démarré avec succès. Bon service !", "success");
+                                            }, 1500);
+                                        }}
+                                        disabled={isShiftStarted}
+                                        className={cn(
+                                            "w-full h-14 rounded-xl font-bold text-[13px] uppercase tracking-[0.2em] shadow-xl transition-all",
+                                            isShiftStarted
+                                                ? "bg-success text-white dark:text-bg-primary hover:bg-success cursor-default"
+                                                : "bg-text-primary hover:bg-black dark:hover:bg-neutral-800 text-bg-secondary dark:text-bg-primary shadow-text-primary/10"
+                                        )}
+                                    >
+                                        {isShiftStarted ? "Service en Cours" : "Valider ma Prise de Poste"}
                                     </Button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Company Entry Requirements */}
-                        <div className="bg-text-primary rounded-2xl p-10 text-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 -mr-32 -mt-32 rounded-full blur-3xl" />
+                        <div className="bg-bg-tertiary dark:bg-bg-secondary rounded-2xl p-10 text-text-primary dark:text-text-primary relative overflow-hidden border border-border">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 -mr-32 -mt-32 rounded-full blur-3xl" />
                             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                                 <div className="max-w-xl">
                                     <h3 className="text-2xl font-serif font-medium mb-3">Accès Sécurisés</h3>
-                                    <p className="text-white/60 text-sm leading-relaxed">
+                                    <p className="text-text-muted text-sm leading-relaxed">
                                         Identifiants uniques pour l'ouverture de l'établissement et l'armement de la sécurité.
                                     </p>
                                 </div>
                                 <div className="flex gap-4">
-                                    <div className="bg-white/5 backdrop-blur-md p-6 rounded-xl border border-white/10 text-center w-32">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Entrée</p>
+                                    <div className="bg-bg-secondary dark:bg-bg-tertiary backdrop-blur-md p-6 rounded-xl border border-border text-center w-32 shadow-sm">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Entrée</p>
                                         <p className="text-2xl font-mono font-medium tracking-widest">8842</p>
                                     </div>
-                                    <div className="bg-white/5 backdrop-blur-md p-6 rounded-xl border border-white/10 text-center w-32">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Alarme</p>
+                                    <div className="bg-bg-secondary dark:bg-bg-tertiary backdrop-blur-md p-6 rounded-xl border border-border text-center w-32 shadow-sm">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Alarme</p>
                                         <p className="text-2xl font-mono font-medium tracking-widest">1090</p>
                                     </div>
                                 </div>
@@ -330,7 +347,7 @@ export default function OnboardingPage() {
                                     { title: 'Protocoles VIP', author: 'Direction', duration: '10 min', status: 'Non commencé', icon: UserCheck },
                                     { title: 'Techniques de Découpe', author: 'Sous-Chef', duration: '30 min', status: 'Non commencé', icon: PenTool }
                                 ].map((module, i) => (
-                                    <div key={i} className="group bg-white rounded-2xl border border-border p-6 hover:shadow-2xl hover:shadow-accent/5 transition-all duration-500 cursor-pointer">
+                                    <div key={i} className="group bg-bg-secondary rounded-2xl border border-border p-6 hover:shadow-2xl hover:shadow-accent/5 transition-all duration-500 cursor-pointer">
                                         <div className="flex justify-between items-start mb-6">
                                             <div className={cn(
                                                 "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
@@ -354,7 +371,13 @@ export default function OnboardingPage() {
                                                 <Clock strokeWidth={1.5} className="w-3.5 h-3.5" />
                                                 <span className="text-[11px] font-mono">{module.duration}</span>
                                             </div>
-                                            <button className="flex items-center gap-1.5 text-[10px] font-bold text-accent uppercase tracking-widest group-hover:gap-3 transition-all">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedModule(module);
+                                                    setShowTrainingModal(true);
+                                                }}
+                                                className="flex items-center gap-1.5 text-[10px] font-bold text-accent uppercase tracking-widest group-hover:gap-3 transition-all"
+                                            >
                                                 Démarrer <ArrowRight strokeWidth={2} className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
@@ -374,12 +397,12 @@ export default function OnboardingPage() {
                                     <p className="text-text-muted text-sm leading-relaxed">
                                         Accédez aux guides techniques, fiches de matériel et protocoles spécifiques à votre station actuelle.
                                     </p>
-                                    <Button variant="outline" className="h-11 rounded-xl border-border px-6 font-bold text-[11px] uppercase tracking-widest hover:bg-white">
+                                    <Button variant="outline" className="h-11 rounded-xl border-border px-6 font-bold text-[11px] uppercase tracking-widest hover:bg-bg-secondary">
                                         Manuel du Poste : {ROLE_LABELS[selectedPoste || 'server']}
                                     </Button>
                                 </div>
                                 <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                    <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
+                                    <div className="bg-bg-secondary p-6 rounded-2xl border border-border shadow-sm">
                                         <h5 className="text-[11px] font-bold text-text-primary uppercase tracking-widest mb-4">Équipements & Alertes</h5>
                                         <div className="space-y-3">
                                             {[
@@ -394,7 +417,7 @@ export default function OnboardingPage() {
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="bg-white p-6 rounded-2xl border border-border shadow-sm">
+                                    <div className="bg-bg-secondary p-6 rounded-2xl border border-border shadow-sm">
                                         <h5 className="text-[11px] font-bold text-text-primary uppercase tracking-widest mb-4">Contacts Équipe Directe</h5>
                                         <div className="flex -space-x-3 mb-4">
                                             {[1, 2, 3, 4].map(i => (
@@ -403,7 +426,10 @@ export default function OnboardingPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <button className="text-[11px] font-bold text-accent uppercase tracking-widest flex items-center gap-2">
+                                        <button
+                                            onClick={() => setShowRHModal(true)}
+                                            className="text-[11px] font-bold text-accent uppercase tracking-widest flex items-center gap-2"
+                                        >
                                             Ouvrir la messagerie station <ArrowRight strokeWidth={2} className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
@@ -418,7 +444,7 @@ export default function OnboardingPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {/* Profile Info */}
                             <div className="md:col-span-1 space-y-6">
-                                <div className="bg-white rounded-2xl p-8 border border-border shadow-sm text-center">
+                                <div className="bg-bg-secondary rounded-2xl p-8 border border-border shadow-sm text-center">
                                     <div className="w-24 h-24 rounded-[2rem] bg-accent/5 border-2 border-accent/20 flex items-center justify-center text-4xl text-accent font-serif mx-auto mb-6 shadow-inner">
                                         {currentUser?.name.charAt(0)}
                                     </div>
@@ -445,16 +471,19 @@ export default function OnboardingPage() {
                                     </Button>
                                 </div>
 
-                                <div className="bg-text-primary rounded-2xl p-8 text-white shadow-xl shadow-text-primary/10">
-                                    <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 text-white/60">Sécurité & Accès</h4>
-                                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 mb-3">
+                                <div className="bg-bg-tertiary dark:bg-bg-secondary rounded-2xl p-8 text-text-primary border border-border shadow-xl">
+                                    <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 text-text-muted">Sécurité & Accès</h4>
+                                    <div className="flex items-center justify-between p-4 bg-bg-secondary dark:bg-bg-tertiary rounded-xl border border-border mb-3">
                                         <div className="flex items-center gap-3">
                                             <Key strokeWidth={1.5} className="w-4 h-4 text-accent" />
                                             <span className="text-sm font-medium">PIN Digital</span>
                                         </div>
-                                        <span className="text-sm font-mono text-white/50">••••</span>
+                                        <span className="text-sm font-mono text-text-muted">••••</span>
                                     </div>
-                                    <Button className="w-full h-10 bg-accent hover:bg-accent/90 text-white rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">
+                                    <Button
+                                        onClick={() => setShowPinModal(true)}
+                                        className="w-full h-10 bg-accent hover:bg-accent/90 text-white dark:text-bg-primary rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all"
+                                    >
                                         Changer mon PIN
                                     </Button>
                                 </div>
@@ -463,7 +492,7 @@ export default function OnboardingPage() {
                             {/* Activity & Stats */}
                             <div className="md:col-span-2 space-y-8">
                                 <div className="grid grid-cols-2 gap-6">
-                                    <div className="bg-white p-8 rounded-2xl border border-border shadow-sm group hover:border-accent transition-all duration-300">
+                                    <div className="bg-bg-secondary p-8 rounded-2xl border border-border shadow-sm group hover:border-accent transition-all duration-300">
                                         <div className="flex items-center gap-4 mb-4">
                                             <div className="w-12 h-12 bg-bg-tertiary rounded-xl flex items-center justify-center border border-border group-hover:bg-accent group-hover:text-white transition-all">
                                                 <Calendar strokeWidth={1.5} className="w-6 h-6" />
@@ -473,7 +502,7 @@ export default function OnboardingPage() {
                                         <p className="text-2xl font-serif font-semibold text-text-primary group-hover:text-accent transition-colors">Demain, 11h30</p>
                                         <p className="text-[12px] text-text-muted mt-2 font-medium">Service Déjeuner • Rang A</p>
                                     </div>
-                                    <div className="bg-white p-8 rounded-2xl border border-border shadow-sm group hover:border-success transition-all duration-300">
+                                    <div className="bg-bg-secondary p-8 rounded-2xl border border-border shadow-sm group hover:border-success transition-all duration-300">
                                         <div className="flex items-center gap-4 mb-4">
                                             <div className="w-12 h-12 bg-bg-tertiary rounded-xl flex items-center justify-center border border-border group-hover:bg-success group-hover:text-white transition-all">
                                                 <Clock strokeWidth={1.5} className="w-6 h-6" />
@@ -485,7 +514,7 @@ export default function OnboardingPage() {
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+                                <div className="bg-bg-secondary rounded-2xl border border-border shadow-sm overflow-hidden">
                                     <div className="p-8 border-b border-border flex items-center justify-between">
                                         <h3 className="text-xl font-serif font-semibold text-text-primary tracking-tight">Historique de Présence</h3>
                                         <Button variant="ghost" className="text-[11px] font-bold text-accent uppercase tracking-widest hover:bg-bg-tertiary">Voir tout</Button>
@@ -525,7 +554,7 @@ export default function OnboardingPage() {
 
                 {activeTab === 'documents' && (
                     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
-                        <div className="flex items-center justify-between bg-white p-8 rounded-[2rem] border border-border shadow-sm border-l-4 border-l-accent">
+                        <div className="flex items-center justify-between bg-bg-secondary p-8 rounded-[2rem] border border-border shadow-sm border-l-4 border-l-accent">
                             <div className="flex items-center gap-6">
                                 <div className="w-16 h-16 bg-accent/5 rounded-2xl flex items-center justify-center">
                                     <ShieldCheck strokeWidth={1.5} className="w-8 h-8 text-accent" />
@@ -550,7 +579,7 @@ export default function OnboardingPage() {
                                         { title: 'Fiche de Paie - Novembre 2024', size: '2.4 MB', date: '01/12/2024' },
                                         { title: 'Fiche de Paie - Octobre 2024', size: '2.4 MB', date: '01/11/2024' }
                                     ].map((doc, i) => (
-                                        <div key={i} className="group bg-white p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between">
+                                        <div key={i} className="group bg-bg-secondary p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between">
                                             <div className="flex items-center gap-5">
                                                 <div className="w-12 h-12 bg-bg-tertiary rounded-xl flex items-center justify-center text-text-muted group-hover:bg-accent/10 group-hover:text-accent transition-all">
                                                     <FileText strokeWidth={1.5} className="w-6 h-6" />
@@ -580,9 +609,9 @@ export default function OnboardingPage() {
                                         { title: 'Avenant de Promotion', size: '1.2 MB', date: '10/10/2024', icon: ArrowRight, status: 'Signé' },
                                         { title: 'Règlement Intérieur', size: '3.5 MB', date: '15/05/2023', icon: Building2, status: 'Lecture OK' }
                                     ].map((doc, i) => (
-                                        <div key={i} className="group bg-white p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between">
+                                        <div key={i} className="group bg-bg-secondary p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between">
                                             <div className="flex items-center gap-5">
-                                                <div className="w-12 h-12 bg-bg-tertiary rounded-xl flex items-center justify-center text-text-muted group-hover:bg-white transition-all shadow-inner">
+                                                <div className="w-12 h-12 bg-bg-tertiary rounded-xl flex items-center justify-center text-text-muted group-hover:bg-bg-secondary transition-all shadow-inner">
                                                     <doc.icon strokeWidth={1.5} className="w-6 h-6" />
                                                 </div>
                                                 <div>
@@ -605,7 +634,11 @@ export default function OnboardingPage() {
                                         Besoin d'un document spécifique ? <br />
                                         Contactez le service RH via la messagerie interne.
                                     </p>
-                                    <Button variant="outline" className="h-11 px-6 rounded-xl border-border mt-6 font-bold text-[11px] uppercase tracking-widest hover:bg-bg-tertiary">
+                                    <Button
+                                        onClick={() => setShowRHModal(true)}
+                                        variant="outline"
+                                        className="h-11 px-6 rounded-xl border-border mt-6 font-bold text-[11px] uppercase tracking-widest hover:bg-bg-tertiary"
+                                    >
                                         Message RH
                                     </Button>
                                 </div>
@@ -614,6 +647,221 @@ export default function OnboardingPage() {
                     </div>
                 )}
             </div>
+
+            {/* Feature Modals */}
+            <Modal
+                isOpen={showPinModal}
+                onClose={() => setShowPinModal(false)}
+                size="md"
+                className="p-0 border-none bg-transparent"
+                showClose={false}
+            >
+                <div className="flex flex-col bg-bg-primary rounded-[3rem] overflow-hidden shadow-[0_32px_128px_rgba(0,0,0,0.4)] border border-border">
+                    <div className="px-10 py-8 bg-accent dark:bg-bg-tertiary text-white dark:text-text-primary relative overflow-hidden border-b border-border">
+                        <div className="relative z-10 flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                                <div className="w-12 h-12 rounded-2xl bg-white/10 dark:bg-accent/10 flex items-center justify-center border border-white/20 dark:border-accent/20">
+                                    <Lock className="w-6 h-6 text-accent-gold" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-serif font-black tracking-tight italic">Accès <span className="text-accent-gold not-italic">Sécurisé</span></h2>
+                                    <p className="text-white/40 dark:text-text-muted text-[9px] font-black uppercase tracking-[0.2em] mt-1">Protocole de chiffrement personnel</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowPinModal(false)} className="w-10 h-10 rounded-xl bg-white/10 dark:bg-bg-primary/50 hover:bg-white/20 dark:hover:bg-bg-tertiary flex items-center justify-center transition-all">
+                                <X className="w-5 h-5 text-white/50 dark:text-text-muted" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="p-10 space-y-8">
+                        <p className="text-text-muted text-[13px] font-medium leading-relaxed italic border-b border-border pb-6">
+                            "Ce code est votre signature numérique. Il sécurise vos accès POS, vos pointages et vos validations de service."
+                        </p>
+
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] px-4">Identification PIN (4 chiffres)</label>
+                            <div className="relative">
+                                <Key className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-accent-gold/40" />
+                                <input
+                                    type="password"
+                                    maxLength={4}
+                                    placeholder="••••"
+                                    value={newPin}
+                                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                                    className="w-full h-18 pl-16 pr-8 bg-bg-tertiary border-2 border-transparent focus:border-accent-gold rounded-2xl font-mono text-3xl tracking-[1em] focus:outline-none transition-all shadow-inner text-text-primary"
+                                />
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={() => {
+                                if (newPin.length === 4) {
+                                    showToast("Nouveau code PIN enregistré", "success");
+                                    setShowPinModal(false);
+                                    setNewPin("");
+                                } else {
+                                    showToast("Le code doit comporter 4 chiffres", "error");
+                                }
+                            }}
+                            className="w-full h-16 bg-accent dark:bg-accent hover:bg-accent/90 text-white dark:text-bg-primary rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all shadow-2xl shadow-accent/20 transform hover:scale-[1.02]"
+                        >
+                            Homologuer mon Code
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={showTrainingModal}
+                onClose={() => setShowTrainingModal(false)}
+                size="xl"
+                className="p-0 border-none bg-transparent"
+                showClose={false}
+            >
+                {selectedModule && (
+                    <div className="flex flex-col bg-bg-primary rounded-[3rem] overflow-hidden shadow-[0_32px_128px_rgba(0,0,0,0.4)] border border-border">
+                        <div className="px-10 py-8 bg-accent dark:bg-bg-tertiary text-white dark:text-text-primary relative overflow-hidden shrink-0 border-b border-border">
+                            <div className="relative z-10 flex items-center justify-between">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-12 h-12 rounded-2xl bg-white/10 dark:bg-accent/10 flex items-center justify-center border border-white/20 dark:border-accent/20">
+                                        <BookOpen className="w-6 h-6 text-accent-gold" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-serif font-black tracking-tight italic">Academy <span className="text-accent-gold not-italic">Module</span></h2>
+                                        <p className="text-white/40 dark:text-text-muted text-[9px] font-black uppercase tracking-[0.2em] mt-1">Transmission du savoir-faire Premium</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 dark:bg-bg-primary/50 rounded-lg border border-white/10 dark:border-border">
+                                        <Clock className="w-3 h-3 text-accent-gold font-black" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/70 dark:text-text-muted">{selectedModule.duration}</span>
+                                    </div>
+                                    <button onClick={() => setShowTrainingModal(false)} className="w-10 h-10 rounded-xl bg-white/10 dark:bg-bg-primary/50 hover:bg-white/20 dark:hover:bg-bg-tertiary flex items-center justify-center transition-all">
+                                        <X className="w-5 h-5 text-white/50 dark:text-text-muted" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-10 space-y-8 overflow-y-auto elegant-scrollbar max-h-[70vh]">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-3xl font-serif font-black text-text-primary tracking-tight">{selectedModule.title}</h3>
+                                <div className="flex items-center gap-3">
+                                    <Sparkles className="w-5 h-5 text-accent-gold animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent-gold">Maîtrise en cours</span>
+                                </div>
+                            </div>
+
+                            <div className="relative aspect-video bg-black rounded-[2.5rem] overflow-hidden group shadow-2xl border-4 border-bg-tertiary">
+                                <img
+                                    src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1200&q=80"
+                                    className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000"
+                                    alt="Academy Video"
+                                />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 cursor-pointer shadow-2xl">
+                                        <Play fill="white" className="w-8 h-8 text-white ml-2" />
+                                    </div>
+                                    <p className="text-white font-black text-[9px] mt-8 uppercase tracking-[0.4em] drop-shadow-lg">Appuyer pour démarrer l'immersion</p>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                                    <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+                                        <div className="w-1/3 h-full bg-accent-gold shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+                                    </div>
+                                    <div className="flex justify-between mt-5">
+                                        <span className="text-white/40 font-mono text-[11px] font-black">04:12</span>
+                                        <span className="text-white/40 font-mono text-[11px] font-black uppercase tracking-widest">Chapitre 1: Fondamentaux</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                <div className="p-8 bg-bg-tertiary rounded-[2rem] border border-border space-y-6">
+                                    <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.3em]">Objectifs de Certification</h4>
+                                    <div className="space-y-4">
+                                        {[
+                                            "Optimisation des flux de service premium",
+                                            "Maîtrise des protocoles d'exception",
+                                            "Gestion de l'expérience client tactile"
+                                        ].map((obj, i) => (
+                                            <div key={i} className="flex items-start gap-4">
+                                                <div className="w-5 h-5 rounded-full bg-white border border-[#ebebe0] flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                                                    <CheckCircle2 className="w-3 h-3 text-success" />
+                                                </div>
+                                                <p className="text-[13px] font-medium text-text-muted leading-snug italic">{obj}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col justify-end gap-4 pb-4">
+                                    <Button variant="outline" onClick={() => setShowTrainingModal(false)} className="h-14 rounded-2xl border-2 border-[#ebebe0] dark:border-white/10 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white dark:hover:bg-white/5 transition-all">
+                                        Suspendre la Session
+                                    </Button>
+                                    <Button className="h-16 bg-neutral-900 dark:bg-bg-primary hover:bg-black dark:hover:bg-black text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all shadow-xl flex items-center justify-center gap-3">
+                                        Valider & Certifier
+                                        <ArrowRight className="w-5 h-5 text-accent-gold" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            <Modal
+                isOpen={showRHModal}
+                onClose={() => setShowRHModal(false)}
+                size="lg"
+                className="p-0 border-none bg-transparent"
+                showClose={false}
+            >
+                <div className="flex flex-col bg-bg-primary rounded-[3rem] overflow-hidden shadow-[0_32px_128px_rgba(0,0,0,0.4)] border border-border">
+                    <div className="px-10 py-8 bg-gradient-to-br from-neutral-900 to-neutral-800 dark:from-[#0A0A0A] dark:to-[#151515] text-white relative overflow-hidden">
+                        <div className="relative z-10 flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                                    <MessageSquare className="w-6 h-6 text-accent-gold" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-serif font-black tracking-tight italic">Concierge <span className="text-accent-gold not-italic">Internal</span></h2>
+                                    <p className="text-white/40 text-[9px] font-black uppercase tracking-[0.2em] mt-1">Messagerie directe Étages & RH</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowRHModal(false)} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+                                <X className="w-5 h-5 text-white/50" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="p-8 space-y-6">
+                        <div className="h-[400px] bg-neutral-100 dark:bg-[#111] rounded-[2.5rem] border border-neutral-200 dark:border-white/10 p-8 overflow-y-auto elegant-scrollbar space-y-6 flex flex-col shadow-inner">
+                            <div className="self-end bg-neutral-900 dark:bg-bg-primary text-white p-6 rounded-[2rem] rounded-tr-none max-w-[85%] shadow-xl">
+                                <p className="text-[13px] font-medium leading-relaxed italic">Bonjour, je souhaiterais savoir comment récupérer mon attestation de formation HACCP.</p>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-3 block">Envoyé • 10:14</span>
+                            </div>
+                            <div className="self-start bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-white/10 p-6 rounded-[2rem] rounded-tl-none max-w-[85%] shadow-soft">
+                                <p className="text-[13px] font-medium leading-relaxed text-text-primary">Bonjour {currentUser?.name}, elle est disponible dans l'onglet "Documents" dès que le module est marqué comme terminé à 100%.</p>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-text-muted mt-3 block">Réponse RH • 10:16</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                            <div className="relative flex-1">
+                                <input
+                                    placeholder="Message à l'attention de la Direction..."
+                                    className="w-full h-16 pl-8 pr-8 bg-white dark:bg-[#111] border-2 border-transparent focus:border-accent-gold rounded-2xl text-[14px] font-medium italic focus:outline-none transition-all shadow-soft text-text-primary"
+                                />
+                            </div>
+                            <Button className="w-16 h-16 bg-neutral-900 dark:bg-bg-primary hover:bg-black dark:hover:bg-black text-white rounded-2xl shadow-xl flex items-center justify-center p-0 transform hover:scale-105 transition-all">
+                                <Send className="w-6 h-6 text-accent-gold" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

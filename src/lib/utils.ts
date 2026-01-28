@@ -25,11 +25,14 @@ export function formatCurrency(value: number): string {
  * @example formatPercent(0.724) => "72,4%"
  */
 export function formatPercent(value: number): string {
+    // If value is > 1, assume it's already in percentage scale (e.g. 15 for 15%)
+    const normalizedValue = Math.abs(value) > 1 ? value / 100 : value;
+
     return new Intl.NumberFormat('fr-FR', {
         style: 'percent',
         minimumFractionDigits: 1,
         maximumFractionDigits: 1,
-    }).format(value);
+    }).format(normalizedValue);
 }
 
 /**

@@ -35,11 +35,11 @@ export default function AccountSettingsPage() {
         return (
             <div className="min-h-[80vh] flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <div className="w-20 h-20 bg-red-500/10 dark:bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
                         <Lock className="w-10 h-10 text-red-500" />
                     </div>
-                    <h1 className="text-2xl font-black text-[#1A1A1A] mb-2">Accès Refusé</h1>
-                    <p className="text-[#ADB5BD]">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
+                    <h1 className="text-2xl font-black text-text-primary mb-2">Accès Refusé</h1>
+                    <p className="text-text-muted">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
                 </div>
             </div>
         );
@@ -90,18 +90,18 @@ export default function AccountSettingsPage() {
             {/* Header */}
             <div className="mb-10">
                 <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-[#00D764]/10 rounded-2xl flex items-center justify-center">
-                        <Shield className="w-7 h-7 text-[#00D764]" />
+                    <div className="w-14 h-14 bg-success/10 rounded-2xl flex items-center justify-center">
+                        <Shield className="w-7 h-7 text-success" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black text-[#1A1A1A] tracking-tight">Gestion des Accès</h1>
-                        <p className="text-[#ADB5BD] text-sm">Configurez les permissions d'accès par rôle</p>
+                        <h1 className="text-3xl font-black text-text-primary tracking-tight">Gestion des Accès</h1>
+                        <p className="text-text-muted text-sm">Configurez les permissions d'accès par rôle</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-4">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-                    <p className="text-sm text-amber-800">
+                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl px-4 py-3 mt-4">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
                         <strong>Attention :</strong> Les modifications affectent tous les utilisateurs du rôle sélectionné.
                     </p>
                 </div>
@@ -119,8 +119,8 @@ export default function AccountSettingsPage() {
                         <div
                             key={role}
                             className={cn(
-                                "bg-white rounded-3xl border transition-all duration-300 overflow-hidden",
-                                isExpanded ? "border-[#00D764] shadow-xl shadow-[#00D764]/5" : "border-neutral-100 hover:border-neutral-200"
+                                "bg-white dark:bg-bg-secondary rounded-3xl border transition-all duration-300 overflow-hidden",
+                                isExpanded ? "border-accent shadow-xl shadow-[#C5A059]/5" : "border-neutral-100 dark:border-border hover:border-neutral-200 dark:hover:border-text-muted"
                             )}
                         >
                             {/* Role Header */}
@@ -130,39 +130,39 @@ export default function AccountSettingsPage() {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={cn(
-                                        "w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg",
-                                        isAdmin ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-[#1A1A1A]"
+                                        "w-12 h-12 rounded-2xl flex items-center justify-center text-white dark:text-bg-primary font-black text-lg",
+                                        isAdmin ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-text-primary"
                                     )}>
                                         {ROLE_LABELS[role].charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-lg text-[#1A1A1A]">{ROLE_LABELS[role]}</h3>
-                                        <p className="text-sm text-[#ADB5BD]">
+                                        <h3 className="font-bold text-lg text-text-primary">{ROLE_LABELS[role]}</h3>
+                                        <p className="text-sm text-text-muted">
                                             {userCount} utilisateur{userCount > 1 ? 's' : ''} • {categories.length} catégories accessibles
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     {hasChanges(role) && (
-                                        <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                                        <span className="px-3 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-full">
                                             Non sauvegardé
                                         </span>
                                     )}
                                     {isExpanded ? (
-                                        <ChevronUp className="w-5 h-5 text-[#ADB5BD]" />
+                                        <ChevronUp className="w-5 h-5 text-text-muted" />
                                     ) : (
-                                        <ChevronDown className="w-5 h-5 text-[#ADB5BD]" />
+                                        <ChevronDown className="w-5 h-5 text-text-muted" />
                                     )}
                                 </div>
                             </button>
 
                             {/* Expanded Content */}
                             {isExpanded && (
-                                <div className="px-6 pb-6 pt-2 border-t border-neutral-100">
+                                <div className="px-6 pb-6 pt-2 border-t border-neutral-100 dark:border-border">
                                     {isAdmin ? (
-                                        <div className="flex items-center gap-3 bg-neutral-50 rounded-2xl p-4">
-                                            <Unlock className="w-5 h-5 text-[#00D764]" />
-                                            <p className="text-sm text-[#495057]">
+                                        <div className="flex items-center gap-3 bg-neutral-50 dark:bg-bg-tertiary rounded-2xl p-4">
+                                            <Unlock className="w-5 h-5 text-accent" />
+                                            <p className="text-sm text-text-muted">
                                                 <strong>Accès total :</strong> Les administrateurs ont accès à toutes les catégories par défaut.
                                             </p>
                                         </div>
@@ -170,30 +170,30 @@ export default function AccountSettingsPage() {
                                         <>
                                             {/* Users with this role */}
                                             <div className="mb-6">
-                                                <h4 className="text-xs font-bold text-[#ADB5BD] uppercase tracking-wider mb-3">
+                                                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">
                                                     Utilisateurs avec ce rôle
                                                 </h4>
                                                 <div className="flex flex-wrap gap-2">
                                                     {users.filter(u => u.role === role).map(user => (
                                                         <div
                                                             key={user.id}
-                                                            className="flex items-center gap-2 bg-neutral-50 px-3 py-2 rounded-xl"
+                                                            className="flex items-center gap-2 bg-neutral-50 dark:bg-bg-tertiary px-3 py-2 rounded-xl"
                                                         >
-                                                            <div className="w-6 h-6 rounded-full bg-[#1A1A1A] text-white text-[10px] font-bold flex items-center justify-center">
+                                                            <div className="w-6 h-6 rounded-full bg-text-primary dark:bg-accent text-white dark:text-bg-primary text-[10px] font-bold flex items-center justify-center">
                                                                 {user.name.charAt(0)}
                                                             </div>
-                                                            <span className="text-sm font-medium text-[#495057]">{user.name}</span>
+                                                            <span className="text-sm font-medium text-text-muted">{user.name}</span>
                                                         </div>
                                                     ))}
                                                     {userCount === 0 && (
-                                                        <span className="text-sm text-[#ADB5BD] italic">Aucun utilisateur</span>
+                                                        <span className="text-sm text-text-muted italic">Aucun utilisateur</span>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Categories Grid */}
                                             <div className="mb-6">
-                                                <h4 className="text-xs font-bold text-[#ADB5BD] uppercase tracking-wider mb-3">
+                                                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">
                                                     Catégories accessibles
                                                 </h4>
                                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -206,13 +206,13 @@ export default function AccountSettingsPage() {
                                                                 className={cn(
                                                                     "flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300",
                                                                     isEnabled
-                                                                        ? "bg-[#E6F9EF] border-[#00D764] text-[#00D764]"
-                                                                        : "bg-neutral-50 border-neutral-100 text-[#ADB5BD] hover:border-neutral-200"
+                                                                        ? "bg-success/10 border-success text-success"
+                                                                        : "bg-neutral-50 dark:bg-bg-tertiary border-neutral-100 dark:border-border text-text-muted hover:border-neutral-200 dark:hover:border-text-muted"
                                                                 )}
                                                             >
                                                                 <div className={cn(
                                                                     "w-6 h-6 rounded-lg flex items-center justify-center",
-                                                                    isEnabled ? "bg-[#00D764] text-white" : "bg-neutral-200 text-neutral-400"
+                                                                    isEnabled ? "bg-success text-white dark:text-bg-primary" : "bg-neutral-200 dark:bg-bg-primary text-neutral-400 dark:text-text-muted"
                                                                 )}>
                                                                     {isEnabled ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                                                                 </div>
@@ -227,7 +227,7 @@ export default function AccountSettingsPage() {
                                             {hasChanges(role) && (
                                                 <button
                                                     onClick={() => saveRolePermissions(role)}
-                                                    className="flex items-center gap-2 bg-[#00D764] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#00B956] transition-colors shadow-lg shadow-[#00D764]/20"
+                                                    className="flex items-center gap-2 bg-success text-white px-6 py-3 rounded-xl font-bold hover:bg-success/90 transition-colors shadow-lg shadow-success/20"
                                                 >
                                                     <Save className="w-5 h-5" />
                                                     Sauvegarder les modifications
@@ -243,12 +243,12 @@ export default function AccountSettingsPage() {
             </div>
 
             {/* Info Footer */}
-            <div className="mt-10 bg-neutral-50 rounded-3xl p-6 border border-neutral-100">
+            <div className="mt-10 bg-neutral-50 dark:bg-bg-tertiary rounded-3xl p-6 border border-neutral-100 dark:border-border">
                 <div className="flex items-start gap-4">
-                    <Users className="w-6 h-6 text-[#ADB5BD] mt-1" />
+                    <Users className="w-6 h-6 text-text-muted mt-1" />
                     <div>
-                        <h4 className="font-bold text-[#1A1A1A] mb-1">À propos des rôles</h4>
-                        <p className="text-sm text-[#ADB5BD] leading-relaxed">
+                        <h4 className="font-bold text-text-primary mb-1">À propos des rôles</h4>
+                        <p className="text-sm text-text-muted leading-relaxed">
                             Chaque membre du personnel se voit attribuer un rôle qui détermine les catégories auxquelles il peut accéder.
                             Les modifications prennent effet immédiatement après la sauvegarde. Pour changer le rôle d'un utilisateur,
                             contactez l'administrateur système.

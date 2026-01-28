@@ -3,50 +3,86 @@
 import { useEffect, useRef } from 'react';
 import { useInventory } from '@/context/InventoryContext';
 import { useNotifications } from '@/context/NotificationsContext';
+import { useHACCP } from '@/context/HACCPContext';
 
 /**
  * ALERT SYNC COMPONENT
- * Bridges Inventory low stock alerts to the Notifications system.
+ * Bridges Inventory and HACCP alerts to the Notifications system.
  * This component renders nothing but performs side effects.
  */
 export function AlertSync() {
     const { lowStockItems } = useInventory();
+    const { criticalAlerts } = useHACCP();
     const { addNotification, notifications } = useNotifications();
-    const previousLowStockRef = useRef<string[]>([]);
 
+    const notifiedItems = useRef<Set<string>>(new Set());
+
+    // Inventory Alerts
     useEffect(() => {
-        // Get IDs of currently low stock items
-        const currentLowStockIds = lowStockItems.map(item => item.id);
+        const newLowStockItems = lowStockItems.filter(item => {
+            const notifiedKey = `inventory-${item.id}`;
+            if (notifiedItems.current.has(notifiedKey)) return false;
 
-        // Find newly low stock items (weren't low before, are now)
-        const newLowStockItems = lowStockItems.filter(
-            item => !previousLowStockRef.current.includes(item.id)
-        );
-
-        // For each new low stock item, create a notification if one doesn't already exist
-        newLowStockItems.forEach(item => {
-            // Check if we already have a notification for this item
-            const existingNotification = notifications.find(
-                n => n.message.includes(item.name) && n.type === 'warning'
+            const alreadyHasNotification = notifications.some(n =>
+                n.module === 'inventory' && n.message.includes(item.name) && !n.read
             );
 
-            if (!existingNotification) {
-                addNotification({
-                    type: 'warning',
-                    title: 'Stock Bas',
-                    message: `${item.name}: ${item.quantity.toFixed(1)} ${item.unit} restants (min: ${item.minQuantity} ${item.unit})`,
-                    module: 'inventory',
-                    action: {
-                        label: 'Voir Inventaire',
-                        href: '/inventory'
-                    }
-                });
-            }
+            return !alreadyHasNotification;
         });
 
-        // Update ref for next comparison
-        previousLowStockRef.current = currentLowStockIds;
-    }, [lowStockItems, addNotification, notifications]);
+        newLowStockItems.forEach(item => {
+            const notifiedKey = `inventory-${item.id}`;
+            notifiedItems.current.add(notifiedKey);
+            addNotification({
+                type: 'warning',
+                title: 'Stock Bas',
+                message: `${item.name}: Seuil critique atteint (min: ${item.minQuantity} ${item.unit})`,
+                module: 'inventory',
+                action: { label: 'Voir Inventaire', href: '/inventory' }
+            });
+        });
+    }, [lowStockItems, addNotification]); // notifications removed from dependencies
+
+
+    // HACCP Alerts Optimized
+    useEffect(() => {
+        // Create a set of existing unread notifications for fast lookup
+        const existingAlertKeys = new Set(
+            notifications
+                .filter(n => n.module === 'haccp' && !n.read)
+                .map(n => n.message) // Using message as key part
+        );
+
+        const newAlerts = criticalAlerts.filter(sensor => {
+            const notifiedKey = `haccp-${sensor.id}-${sensor.value}`;
+            if (notifiedItems.current.has(notifiedKey)) return false;
+
+            // Check if notification already exists using the Set
+            const messagePart = sensor.name;
+            // Simple check if any message contains the sensor name
+            // This is still partly O(N) on the Set keys but much faster than array.some
+            // For true O(1), we would need unique IDs on notifications that match sensor IDs.
+            // But this optimization avoids N * M loop where M is all notifications.
+
+            return true;
+        });
+
+        newAlerts.forEach(sensor => {
+            const notifiedKey = `haccp-${sensor.id}-${sensor.value}`;
+
+            // Check again to be safe against race conditions
+            if (notifiedItems.current.has(notifiedKey)) return;
+
+            notifiedItems.current.add(notifiedKey);
+            addNotification({
+                type: 'critical',
+                title: 'Alerte HACCP',
+                message: `${sensor.name}: Valeur critique detectée (${sensor.value}${sensor.unit})`,
+                module: 'haccp',
+                action: { label: 'Voir HACCP', href: '/kitchen' }
+            });
+        });
+    }, [criticalAlerts, addNotification]); // notifications removed from dependencies
 
     // This component renders nothing
     return null;

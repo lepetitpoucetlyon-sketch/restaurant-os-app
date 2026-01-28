@@ -1,97 +1,50 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/lib/db';
 import { PRODUCTS } from '@/lib/mock-data';
 import { useReservations } from './ReservationsContext';
-import type { PrepTask, Product } from '@/types';
+import { useInventory } from './InventoryContext';
+import type { PrepTask, Product, Recipe, MiseEnPlaceTask, RecipeIngredient } from '@/types';
 
 /**
  * RECIPE & PRODUCTION CONTEXT
- * Manages kitchen production workflow, recipes, prep lists, and task assignments.
+ * Manages kitchen production workflow, recipes, prep lists, and task assignments via Dexie.js.
  */
 
-export interface RecipeIngredient {
-    id: string;
-    name: string;
-    quantity: number;
-    unit: string;
-    cost: number;
-}
-
-export interface RecipeStep {
-    order: number;
-    instruction: string;
-    duration: number; // in minutes
-    temperature?: string;
-    tip?: string;
-}
-
-export interface Recipe {
-    id: string;
-    name: string;
-    category: string;
-    description?: string;
-    prepTime: number;
-    cookTime: number;
-    portions: number;
-    difficulty: 'easy' | 'medium' | 'hard';
-    ingredients: RecipeIngredient[];
-    steps: RecipeStep[];
-    allergens: string[];
-    dietaryInfo: string[];
-    costPrice: number;
-    sellingPrice: number;
-    margin: number;
-    imageUrl?: string;
-    color: string;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-export interface MiseEnPlaceTask extends PrepTask {
-    assignedTo?: string;
-    station?: string;
-    priority: 'low' | 'normal' | 'high' | 'urgent';
-    estimatedTime: number; // in minutes
-    actualTime?: number;
-    notes?: string;
-    recipe?: string; // linked recipe id
-}
-
 interface RecipeContextType {
-    recipes: Product[];
+    recipes: any[];
     customRecipes: Recipe[];
     prepTasks: MiseEnPlaceTask[];
 
     // Recipe CRUD
-    addRecipe: (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'margin'>) => void;
-    updateRecipe: (id: string, updates: Partial<Recipe>) => void;
-    deleteRecipe: (id: string) => void;
-    getRecipeById: (id: string) => Recipe | undefined;
+    addRecipe: (recipe: any) => Promise<void>;
+    updateRecipe: (id: string, updates: Partial<Recipe>) => Promise<void>;
+    deleteRecipe: (id: string) => Promise<void>;
+    getRecipeById: (id: string) => Promise<Recipe | undefined>;
 
     // Prep Tasks CRUD
-    addPrepTask: (task: Omit<MiseEnPlaceTask, 'id'>) => void;
-    updatePrepTask: (id: string, updates: Partial<MiseEnPlaceTask>) => void;
-    deletePrepTask: (id: string) => void;
-    togglePrepTask: (id: string) => void;
-    assignPrepTask: (taskId: string, staffId: string) => void;
+    addPrepTask: (task: Omit<MiseEnPlaceTask, 'id'>) => Promise<void>;
+    updatePrepTask: (id: string, updates: Partial<MiseEnPlaceTask>) => Promise<void>;
+    deletePrepTask: (id: string) => Promise<void>;
+    togglePrepTask: (id: string) => Promise<void>;
+    assignPrepTask: (taskId: string, staffId: string) => Promise<void>;
 
     // Helpers
     getRecipeSteps: (productId: string) => any[];
     miseEnPlaceTarget: Record<string, number>;
-    calculateRecipeCost: (ingredients: RecipeIngredient[]) => number;
+    calculateRecipeCost: (ingredients: any[]) => number;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 
-// Initial custom recipes
 const INITIAL_RECIPES: Recipe[] = [
     {
         id: 'recipe_001',
         name: 'Risotto aux Truffes',
         category: 'Plat Principal',
-        description: 'Risotto crémeux aux truffes noires du Périgord',
+        description: 'Risotto crémeux aux truffes noires du Périgord, une explosion de saveurs automnales.',
         prepTime: 15,
         cookTime: 25,
         portions: 4,
@@ -102,129 +55,119 @@ const INITIAL_RECIPES: Recipe[] = [
             { id: 'ing3', name: 'Parmesan', quantity: 80, unit: 'g', cost: 3.20 },
             { id: 'ing4', name: 'Bouillon', quantity: 1, unit: 'L', cost: 1.50 },
             { id: 'ing5', name: 'Beurre', quantity: 60, unit: 'g', cost: 0.90 },
-            { id: 'ing6', name: 'Échalotes', quantity: 2, unit: 'pièces', cost: 0.40 },
+            { id: 'ing6', name: 'Échalotes', quantity: 2, unit: 'pièces', cost: 0.40 }
         ],
         steps: [
-            { order: 1, instruction: 'Faire suer les échalotes dans le beurre', duration: 3 },
-            { order: 2, instruction: 'Nacrer le riz 2 minutes', duration: 2, tip: 'Le riz doit devenir translucide' },
-            { order: 3, instruction: 'Mouiller louche par louche en remuant', duration: 18, temperature: 'Feu moyen' },
-            { order: 4, instruction: 'Mantecare avec le parmesan et le beurre froid', duration: 2, tip: 'Hors du feu pour émulsionner' },
-            { order: 5, instruction: 'Râper la truffe au moment du service', duration: 1 },
+            {
+                order: 1,
+                instruction: 'Faire suer les échalotes finement ciselées dans le beurre noisette jusqu\'à ce qu\'elles soient translucides.',
+                duration: 3,
+                imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=800&auto=format&fit=crop'
+            },
+            {
+                order: 2,
+                instruction: 'Nacrer le riz Carnaroli pendant 2 minutes en remuant constamment pour enrober chaque grain de matière grasse.',
+                duration: 2,
+                tip: 'Le riz doit devenir nacré et légèrement translucide sur les bords.',
+                imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800&auto=format&fit=crop'
+            },
+            {
+                order: 3,
+                instruction: 'Mouiller avec le bouillon chaud, louche par louche, en attendant que le liquide soit absorbé avant d\'en ajouter davantage.',
+                duration: 18,
+                temperature: 'Feu moyen',
+                videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cooking-a-delicious-rice-dish-40340-large.mp4'
+            },
+            {
+                order: 4,
+                instruction: 'Mantecare hors du feu : ajouter le parmesan fraîchement râpé et le beurre très froid pour créer une émulsion crémeuse.',
+                duration: 2,
+                tip: 'Le choc thermique aide à créer l\'onctuosité caractéristique.',
+                imageUrl: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=800&auto=format&fit=crop'
+            },
+            {
+                order: 5,
+                instruction: 'Râper la truffe noire fraîche à la mandoline directement sur le risotto fumant au moment du dressage.',
+                duration: 1,
+                imageUrl: 'https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?q=80&w=800&auto=format&fit=crop'
+            }
         ],
         allergens: ['Lactose', 'Gluten'],
         dietaryInfo: ['Végétarien'],
         costPrice: 53.50,
-        sellingPrice: 42.00,
-        margin: 0,
+        sellingPrice: 85.00,
+        margin: 37,
         color: '#1A1A1A',
         isActive: true,
         createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01'),
-    },
-    {
-        id: 'recipe_002',
-        name: 'Tartare de Boeuf',
-        category: 'Entrée',
-        description: 'Tartare de boeuf Charolais coupé au couteau',
-        prepTime: 20,
-        cookTime: 0,
-        portions: 4,
-        difficulty: 'easy',
-        ingredients: [
-            { id: 'ing1', name: 'Filet de boeuf', quantity: 600, unit: 'g', cost: 28.00 },
-            { id: 'ing2', name: 'Câpres', quantity: 30, unit: 'g', cost: 1.20 },
-            { id: 'ing3', name: 'Cornichons', quantity: 40, unit: 'g', cost: 0.80 },
-            { id: 'ing4', name: 'Échalotes', quantity: 2, unit: 'pièces', cost: 0.40 },
-            { id: 'ing5', name: 'Jaune d\'oeuf', quantity: 4, unit: 'pièces', cost: 1.20 },
-        ],
-        steps: [
-            { order: 1, instruction: 'Parer le filet de boeuf', duration: 5 },
-            { order: 2, instruction: 'Couper en brunoise fine au couteau', duration: 10, tip: 'Garder la viande très froide' },
-            { order: 3, instruction: 'Ciseler les condiments', duration: 3 },
-            { order: 4, instruction: 'Assaisonner et mélanger délicatement', duration: 2 },
-        ],
-        allergens: ['Oeufs', 'Moutarde'],
-        dietaryInfo: [],
-        costPrice: 31.60,
-        sellingPrice: 24.00,
-        margin: 0,
-        color: '#8B0000',
-        isActive: true,
-        createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01'),
+        updatedAt: new Date('2025-01-01')
     },
 ];
 
-// Initial prep tasks
 const INITIAL_PREP_TASKS: MiseEnPlaceTask[] = [
-    {
-        id: 'mep_001',
-        name: 'Préparer la brunoise de légumes',
-        quantity: 2,
-        unit: 'kg',
-        isCompleted: false,
-        dueDate: new Date(),
-        assignedTo: 'Jean',
-        station: 'Garde-manger',
-        priority: 'high',
-        estimatedTime: 45,
-        notes: 'Carottes, céleri, oignons pour les sauces du soir',
-    },
-    {
-        id: 'mep_002',
-        name: 'Tailler les pommes de terre',
-        quantity: 5,
-        unit: 'kg',
-        isCompleted: false,
-        dueDate: new Date(),
-        assignedTo: 'Marie',
-        station: 'Légumerie',
-        priority: 'normal',
-        estimatedTime: 30,
-    },
-    {
-        id: 'mep_003',
-        name: 'Préparer les fonds de sauce',
-        quantity: 4,
-        unit: 'L',
-        isCompleted: true,
-        dueDate: new Date(),
-        assignedTo: 'Pierre',
-        station: 'Saucier',
-        priority: 'high',
-        estimatedTime: 120,
-    },
-    {
-        id: 'mep_004',
-        name: 'Portionner les viandes',
-        quantity: 20,
-        unit: 'portions',
-        isCompleted: false,
-        dueDate: new Date(),
-        station: 'Garde-manger',
-        priority: 'urgent',
-        estimatedTime: 40,
-        notes: 'Filets de boeuf pour le service du soir',
-    },
+    { id: 'mep_001', name: 'Préparer la brunoise de légumes', quantity: 2, unit: 'kg', isCompleted: false, dueDate: new Date(), assignedTo: 'Jean', station: 'Garde-manger', priority: 'high', estimatedTime: 45, notes: 'Carottes, céleri, oignons pour les sauces du soir' },
+    { id: 'mep_002', name: 'Tailler les pommes de terre', quantity: 5, unit: 'kg', isCompleted: false, dueDate: new Date(), assignedTo: 'Marie', station: 'Légumerie', priority: 'normal', estimatedTime: 30 },
 ];
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
     const { reservations } = useReservations();
-    const [customRecipes, setCustomRecipes] = useState<Recipe[]>(INITIAL_RECIPES);
-    const [prepTasks, setPrepTasks] = useState<MiseEnPlaceTask[]>(INITIAL_PREP_TASKS);
+    const { ingredients: inventoryIngredients } = useInventory();
+    const customRecipes = useLiveQuery(() => db.recipes.toArray()) || [];
+    const prepTasks = useLiveQuery(() => db.prepTasks.toArray()) || [];
 
-    // Recipes are extended products from mock-data
-    const recipes = useMemo(() => {
-        return PRODUCTS.map(p => ({
-            ...p,
-            recipeSteps: p.recipeSteps || [
-                { order: 1, instruction: "Préparer les ingrédients frais", duration: 5 },
-                { order: 2, instruction: "Assemblage selon fiche technique", duration: 10 },
-                { order: 3, instruction: "Dressage premium sur assiette chaude", duration: 2 }
-            ],
-            prepTime: p.prepTime || 15
-        })) as Product[];
+    // Initial Migration
+    useEffect(() => {
+        const init = async () => {
+            const recipeCount = await db.recipes.count();
+            if (recipeCount === 0) {
+                // Initialize with both INITIAL_RECIPES and PRODUCTS (mapped to Recipe structure)
+                const recipesToSeed: Recipe[] = [
+                    ...INITIAL_RECIPES,
+                    ...PRODUCTS.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        category: p.categoryId,
+                        description: p.description || '',
+                        prepTime: (p as any).prepTime || 15,
+                        cookTime: (p as any).cookTime || 10,
+                        portions: 1,
+                        difficulty: 'easy',
+                        ingredients: (p.ingredients || []).map(i => ({
+                            id: i.ingredientId,
+                            name: i.ingredientId, // Best effort name
+                            quantity: i.quantity,
+                            unit: 'kg',
+                            cost: 0
+                        })),
+                        steps: (p as any).recipeSteps || [
+                            { order: 1, instruction: "Préparer les ingrédients frais", duration: 5 },
+                            { order: 2, instruction: "Assemblage selon fiche technique", duration: 10 },
+                            { order: 3, instruction: "Dressage premium sur assiette chaude", duration: 2 }
+                        ],
+                        allergens: [],
+                        dietaryInfo: [],
+                        costPrice: 0,
+                        sellingPrice: p.price,
+                        margin: 100,
+                        color: (p as any).color || '#1A1A1A',
+                        isActive: true,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    }))
+                ] as Recipe[];
+                await db.recipes.bulkAdd(recipesToSeed);
+            }
+
+            const taskCount = await db.prepTasks.count();
+            if (taskCount === 0) await db.prepTasks.bulkAdd(INITIAL_PREP_TASKS);
+        };
+        init();
     }, []);
+
+    // Unified recipes list: Custom recipes from DB
+    const recipes = useMemo(() => {
+        return customRecipes;
+    }, [customRecipes]);
 
     // Calculate Mise-en-place targets based on reservations for Today
     const miseEnPlaceTarget = useMemo(() => {
@@ -244,7 +187,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     }, [reservations]);
 
     // Recipe CRUD
-    const addRecipe = (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'margin'>) => {
+    const addRecipe = async (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'margin'>) => {
         const newRecipe: Recipe = {
             ...recipe,
             id: `recipe_${Date.now()}`,
@@ -252,72 +195,79 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
             createdAt: new Date(),
             updatedAt: new Date(),
         };
-        setCustomRecipes(prev => [...prev, newRecipe]);
+        await db.recipes.add(newRecipe);
     };
 
-    const updateRecipe = (id: string, updates: Partial<Recipe>) => {
-        setCustomRecipes(prev => prev.map(r => {
-            if (r.id === id) {
-                const updated = { ...r, ...updates, updatedAt: new Date() };
-                // Recalculate margin if prices changed
-                if (updates.sellingPrice !== undefined || updates.costPrice !== undefined) {
-                    const sp = updates.sellingPrice ?? r.sellingPrice;
-                    const cp = updates.costPrice ?? r.costPrice;
-                    updated.margin = sp > 0 ? ((sp - cp) / sp) * 100 : 0;
-                }
-                return updated;
-            }
-            return r;
-        }));
+    const updateRecipe = async (id: string, updates: Partial<Recipe>) => {
+        const r = await db.recipes.get(id);
+
+        let baseRecipe: Recipe;
+        if (!r) {
+            // Find in current recipes list if not in DB yet (fallback for sync issues)
+            const found = recipes.find(rec => rec.id === id);
+            if (!found) return;
+            baseRecipe = found;
+        } else {
+            baseRecipe = r;
+        }
+
+        const updated = { ...baseRecipe, ...updates, updatedAt: new Date() };
+        if (updates.sellingPrice !== undefined || updates.costPrice !== undefined) {
+            const sp = updates.sellingPrice ?? baseRecipe.sellingPrice;
+            const cp = updates.costPrice ?? baseRecipe.costPrice;
+            updated.margin = sp > 0 ? ((sp - cp) / sp) * 100 : 0;
+        }
+        await db.recipes.put(updated);
     };
 
-    const deleteRecipe = (id: string) => {
-        setCustomRecipes(prev => prev.filter(r => r.id !== id));
+    const deleteRecipe = async (id: string) => {
+        await db.recipes.delete(id);
     };
 
-    const getRecipeById = (id: string) => {
-        return customRecipes.find(r => r.id === id);
+    const getRecipeById = async (id: string) => {
+        return await db.recipes.get(id);
     };
 
     // Prep Task CRUD
-    const addPrepTask = (task: Omit<MiseEnPlaceTask, 'id'>) => {
+    const addPrepTask = async (task: Omit<MiseEnPlaceTask, 'id'>) => {
         const newTask: MiseEnPlaceTask = {
             ...task,
             id: `mep_${Date.now()}`,
         };
-        setPrepTasks(prev => [...prev, newTask]);
+        await db.prepTasks.add(newTask);
     };
 
-    const updatePrepTask = (id: string, updates: Partial<MiseEnPlaceTask>) => {
-        setPrepTasks(prev => prev.map(t =>
-            t.id === id ? { ...t, ...updates } : t
-        ));
+    const updatePrepTask = async (id: string, updates: Partial<MiseEnPlaceTask>) => {
+        await db.prepTasks.update(id, updates);
     };
 
-    const deletePrepTask = (id: string) => {
-        setPrepTasks(prev => prev.filter(t => t.id !== id));
+    const deletePrepTask = async (id: string) => {
+        await db.prepTasks.delete(id);
     };
 
-    const togglePrepTask = (id: string) => {
-        setPrepTasks(prev => prev.map(t =>
-            t.id === id ? { ...t, isCompleted: !t.isCompleted } : t
-        ));
+    const togglePrepTask = async (id: string) => {
+        const t = await db.prepTasks.get(id);
+        if (t) {
+            await db.prepTasks.update(id, { isCompleted: !t.isCompleted });
+        }
     };
 
-    const assignPrepTask = (taskId: string, staffId: string) => {
-        setPrepTasks(prev => prev.map(t =>
-            t.id === taskId ? { ...t, assignedTo: staffId } : t
-        ));
+    const assignPrepTask = async (taskId: string, staffId: string) => {
+        await db.prepTasks.update(taskId, { assignedTo: staffId });
     };
 
     const getRecipeSteps = (productId: string) => {
         const product = recipes.find(p => p.id === productId);
-        return product?.recipeSteps || [];
+        return (product as any)?.recipeSteps || [];
     };
 
-    const calculateRecipeCost = (ingredients: RecipeIngredient[]) => {
-        return ingredients.reduce((sum, ing) => sum + ing.cost, 0);
-    };
+    const calculateRecipeCost = useCallback((recipeIngredients: any[]) => {
+        return recipeIngredients.reduce((sum, ing) => {
+            const inventoryItem = inventoryIngredients.find(ii => ii.id === ing.ingredientId);
+            const unitCost = inventoryItem?.cost || 0;
+            return sum + (unitCost * ing.quantity);
+        }, 0);
+    }, [inventoryIngredients]);
 
     return (
         <RecipeContext.Provider value={{

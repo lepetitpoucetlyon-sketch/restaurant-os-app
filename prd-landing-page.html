@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant OS — Ultimate PRD</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1a1a1a;
+            --card-hover: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            --accent-green: #00D764;
+            --accent-blue: #3B82F6;
+            --accent-purple: #8B5CF6;
+            --accent-orange: #F59E0B;
+            --accent-red: #EF4444;
+            --border: rgba(255, 255, 255, 0.08);
+            --gradient-1: linear-gradient(135deg, #00D764 0%, #00B4D8 100%);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- COMPONENTS --- */
+        .section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 8rem 2rem;
+        }
+
+        .section-header {
+            margin-bottom: 4rem;
+            display: flex;
+            align-items: flex-end;
+            gap: 1.5rem;
+        }
+
+        .section-number {
+            font-size: 4rem;
+            font-weight: 900;
+            -webkit-text-stroke: 1px var(--border);
+            color: transparent;
+            line-height: 0.8;
+            opacity: 0.5;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+        }
+
+        .section-subtitle {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--accent-green);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(0, 215, 100, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero h1 span {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.25em;
+            font-weight: 800;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--accent-green);
+            margin-top: 1rem;
+            -webkit-text-fill-color: var(--accent-green);
+        }
+
+        .hero p {
+            max-width: 600px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 4rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-item {
+            text-align: center;
+            position: relative;
+        }
+
+        .stat-item::after {
+            content: '';
+            position: absolute;
+            right: -2rem;
+            top: 10%;
+            height: 80%;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .stat-item:last-child::after {
+            display: none;
+        }
+
+        .stat-val {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            line-height: 1;
+            letter-spacing: -0.05em;
+        }
+
+        .stat-lbl {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* TECH STACK GRID */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tech-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .tech-card:hover {
+            border-color: var(--accent-green);
+            transform: translateY(-5px);
+        }
+
+        .tech-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .tech-ver {
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            font-family: 'JetBrains Mono';
+            margin-bottom: 0.75rem;
+        }
+
+        .tech-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* MODULES INTERACTIVE GRID */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 2rem;
+        }
+
+        .module-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .module-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(-4px);
+        }
+
+        .module-header {
+            padding: 2rem;
+            position: relative;
+        }
+
+        .module-badge {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            font-family: 'JetBrains Mono';
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .module-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--accent-green);
+        }
+
+        .module-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .module-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .module-steps {
+            background: #0f0f0f;
+            border-top: 1px solid var(--border);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .module-steps.open {
+            max-height: 1000px;
+        }
+
+        .steps-content {
+            padding: 2rem;
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .step-item {
+            padding-left: 2rem;
+            position: relative;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .step-item::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: -2px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .step-tech {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono';
+        }
+
+        .module-footer {
+            padding: 1.25rem 2rem;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* BUTTONS */
+        .btn-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .btn-toggle:hover {
+            color: var(--accent-green);
+        }
+
+        .btn-toggle svg {
+            transition: transform 0.3s;
+        }
+
+        .btn-toggle.active svg {
+            transform: rotate(180deg);
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: var(--text-primary);
+            color: var(--bg-primary);
+        }
+
+        /* CHECKLISTS & PRACTICES */
+        .practices-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .practices-table th {
+            background: var(--bg-tertiary);
+            text-align: left;
+            padding: 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .practices-table td {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-pill.done {
+            background: rgba(0, 215, 100, 0.1);
+            color: var(--accent-green);
+        }
+
+        .status-pill.part {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-orange);
+        }
+
+        .status-pill.miss {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .checklist-card {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .checklist-head {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checklist-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .checklist-items li {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .checklist-items li:last-child {
+            border: none;
+        }
+
+        /* ROADMAP */
+        .roadmap {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .roadmap-phase {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .phase-num {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--bg-tertiary);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .phase-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .phase-dur {
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            margin-bottom: 1.5rem;
+        }
+
+        .phase-tasks li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            list-style: none;
+        }
+
+        .phase-tasks li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-green);
+        }
+
+        /* FLOATING ACTION BUTTON & MODAL */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent-green);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 100px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0, 215, 100, 0.3);
+            border: none;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: transform 0.2s;
+        }
+
+        .fab:hover {
+            transform: scale(1.05);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #111;
+            width: 90%;
+            max-width: 800px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .prompt-area {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono';
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .roadmap {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .hero-stats {
+                gap: 2rem;
+            }
+
+            .roadmap {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 4rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- MASTER PROMPT FAB -->
+    <button class="fab" onclick="openModal()">
+        <i data-lucide="sparkles"></i>
+        Obtenir le Master Prompt
+    </button>
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Restaurant OS<br><span>Interactive PRD</span></h1>
+        <p>
+            Plateforme de gestion unifiée nouvelle génération. <br>
+            28 modules interconnectés, du Dashboad au Driver App.
+        </p>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <div class="stat-val">28</div>
+                <div class="stat-lbl">Modules</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val">100%</div>
+                <div class="stat-lbl">Dark Mode</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val">∞</div>
+                <div class="stat-lbl">Scalability</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECH STACK -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-number">01</div>
+            <div>
+                <span class="section-subtitle">Fondations</span>
+                <h2 class="section-title">Architecture Technique</h2>
+            </div>
+        </div>
+        <div class="tech-grid">
+            <div class="tech-card">
+                <div class="tech-name">Next.js 16</div>
+                <div class="tech-ver">App Router</div>
+                <div class="tech-desc">Server Actions & React Server Components pour une performance optimale.</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">Tailwind 4</div>
+                <div class="tech-ver">Utility-First</div>
+                <div class="tech-desc">Système de design tokens personnalisé avec variables CSS natives.</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">Framer Motion</div>
+                <div class="tech-ver">Animations</div>
+                <div class="tech-desc">Transitions layou, micro-interactions et gestes fluides.</div>
+            </div>
+            <div class="tech-card">
+                <div class="tech-name">Dexie.js</div>
+                <div class="tech-ver">Offline-First</div>
+                <div class="tech-desc">Cache local IndexedDB pour supporter le mode hors-ligne.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODULES GRID -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-number">02</div>
+            <div>
+                <span class="section-subtitle">Fonctionnalités</span>
+                <h2 class="section-title">28 Modules Complets</h2>
+            </div>
+        </div>
+        <div class="modules-grid" id="modulesContainer">
+            <!-- Populated by JS -->
+        </div>
+    </section>
+
+    <!-- QUALITY AUDIT -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-number">03</div>
+            <div>
+                <span class="section-subtitle">Qualité</span>
+                <h2 class="section-title">Audit Best Practices</h2>
+            </div>
+        </div>
+        <table class="practices-table">
+            <thead>
+                <tr>
+                    <th>Domaine</th>
+                    <th>Pratique</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Architecture</td>
+                    <td>Feature-Based Folder Structure</td>
+                    <td><span class="status-pill done">Implémenté</span></td>
+                </tr>
+                <tr>
+                    <td>Performance</td>
+                    <td>Code Splitting / Lazy Loading</td>
+                    <td><span class="status-pill done">Implémenté</span></td>
+                </tr>
+                <tr>
+                    <td>UX/UI</td>
+                    <td>Glassmorphism & Dark Mode</td>
+                    <td><span class="status-pill done">Implémenté</span></td>
+                </tr>
+                <tr>
+                    <td>Responsiveness</td>
+                    <td>Mobile-First Grid Layouts</td>
+                    <td><span class="status-pill done">Implémenté</span></td>
+                </tr>
+                <tr>
+                    <td>Testing</td>
+                    <td>Unit Tests (Vitest)</td>
+                    <td><span class="status-pill miss">À Faire</span></td>
+                </tr>
+                <tr>
+                    <td>Backend</td>
+                    <td>API Routes & DB Connection</td>
+                    <td><span class="status-pill miss">À Faire</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ROADMAP -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-number">04</div>
+            <div>
+                <span class="section-subtitle">Planification</span>
+                <h2 class="section-title">Roadmap Production</h2>
+            </div>
+        </div>
+        <div class="roadmap">
+            <div class="roadmap-phase">
+                <div class="phase-num">01</div>
+                <h3 class="phase-title">Fondations</h3>
+                <div class="phase-dur">Sem. 1-2</div>
+                <ul class="phase-tasks">
+                    <li>Setup Next.js & Tailwind</li>
+                    <li>Design System (Tokens)</li>
+                    <li>Navigation & Layouts</li>
+                    <li>Modules Core (POS, Kitchen)</li>
+                </ul>
+            </div>
+            <div class="roadmap-phase">
+                <div class="phase-num">02</div>
+                <h3 class="phase-title">Expansion</h3>
+                <div class="phase-dur">Sem. 3-5</div>
+                <ul class="phase-tasks">
+                    <li>20+ Modules Satellites</li>
+                    <li>Intégrations (Stripe, Twilio)</li>
+                    <li>Données Mockées Avancées</li>
+                    <li>Graphiques Interactifs</li>
+                </ul>
+            </div>
+            <div class="roadmap-phase">
+                <div class="phase-num">03</div>
+                <h3 class="phase-title">Backend</h3>
+                <div class="phase-dur">Sem. 6-8</div>
+                <ul class="phase-tasks">
+                    <li>Auth (NextAuth)</li>
+                    <li>Supabase Postgres DB</li>
+                    <li>API Routes Trpc/REST</li>
+                    <li>WebSockets (Sync)</li>
+                </ul>
+            </div>
+            <div class="roadmap-phase">
+                <div class="phase-num">04</div>
+                <h3 class="phase-title">Launch</h3>
+                <div class="phase-dur">Sem. 9</div>
+                <ul class="phase-tasks">
+                    <li>Tests E2E Playwright</li>
+                    <li>Audit Sécurité</li>
+                    <li>Déploiement Vercel</li>
+                    <li>Documentation Utilisateur</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer
+        style="text-align:center; padding: 4rem; border-top: 1px solid var(--border); margin-top: 4rem; color: var(--text-muted);">
+        <p style="font-family: 'Playfair Display'; font-size:1.5rem; margin-bottom:1rem; color:var(--text-primary);">
+            Restaurant OS</p>
+        <p>Interactive PRD v2.0 • Généré en Janvier 2026</p>
+    </footer>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="promptModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Prompt Complet</h3>
+                <button onclick="closeModal()" style="background:none; border:none; color:white; cursor:pointer;"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:1rem; color:var(--text-secondary);">Copiez ce prompt pour générer la structure
+                    manquante en une seule fois.</p>
+                <div class="prompt-area" id="masterPromptText">
+                    Act as a Senior Principal Engineer. Your goal is to scaffold the complete remaining architecture for
+                    "Restaurant OS" to reach the target of 28 functional modules.
+
+                    CONTEXT:
+                    We have a Next.js 16 app with a "Master UI" design system (Glassmorphism, Tailwind v4).
+                    Existing modules: POS, Kitchen, Reservations, Inventory, Staff.
+
+                    TASK:
+                    Systematically generate the directory structure, main pages, and core components for the following
+                    missing modules:
+                    1. Delivery Integration, Supplier Portal, Maintenance
+                    2. Review Management, Loyalty Program, Event Management
+                    3. Franchise HQ, Kiosk Mode, Waste Tracking
+                    4. Drive App, R&D / Recipes, EDM (Docs)
+
+                    REQUIREMENTS:
+                    - For each module, create `src/app/[module]/page.tsx` with a responsive grid layout.
+                    - Create dummy data in `src/data/[module]Data.ts`.
+                    - Use the `GlassCard` and `PageHeader` components.
+                    - Implement at least one interactive chart or data table per module using the existing `Recharts` or
+                    `TanStack Table` setup.
+
+                    Execute this now.
+                </div>
+                <button class="btn-copy" onclick="copyText('masterPromptText')"
+                    style="width:100%; margin-top:1rem; justify-content:center; padding:1rem; background:var(--accent-green); color:black;">
+                    <i data-lucide="copy"></i> Copier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modules = [
+            { id: 1, name: "Dashboard", icon: "layout-dashboard", desc: "KPIs temps réel, météo et feed d'activité.", steps: [{ a: "Consolider Données", t: "Promise.all" }, { a: "Widget Météo", t: "OpenWeather API" }, { a: "Responsive Grid", t: "CSS Grid" }] },
+            { id: 2, name: "POS (Caisse)", icon: "monitor-play", desc: "Interface tactile de prise de commande rapide.", steps: [{ a: "Grille Produits", t: "Virtual Scroll" }, { a: "Panier", t: "Zustand Store" }, { a: "Paiement", t: "Stripe API" }] },
+            { id: 3, name: "Kitchen Display", icon: "chef-hat", desc: "Écran cuisine pour l'affichage des bons.", steps: [{ a: "WebSocket Sync", t: "Supabase" }, { a: "Ticket Aging", t: "Timer Logic" }, { a: "Bump Bar", t: "Keyboard Events" }] },
+            { id: 4, name: "Kitchen Mgmt", icon: "utensils", desc: "Mise en place et production.", steps: [{ a: "Prep Lists", t: "Auto-gen tasks" }, { a: "Fiches Recettes", t: "Interactive View" }, { a: "Etiquettes", t: "ZPL Print" }] },
+            { id: 5, name: "Plan de Salle", icon: "map", desc: "Gestion graphique des tables et zones.", steps: [{ a: "Canvas Editor", t: "Konva.js" }, { a: "Multi-étages", t: "Layer System" }, { a: "Status Sync", t: "Real-time DB" }] },
+            { id: 6, name: "Réservations", icon: "calendar-clock", desc: "Cahier de résa et timeline.", steps: [{ a: "Timeline View", t: "Gantt Chart" }, { a: "Conflits", t: "Logic Check" }, { a: "SMS Rappel", t: "Twilio" }] },
+            { id: 7, name: "Analytics", icon: "bar-chart-2", desc: "Rapports et visualisation de données.", steps: [{ a: "Data Pipeline", t: "Aggregation" }, { a: "Charts", t: "Recharts" }, { a: "Exports", t: "jsPDF" }] },
+            { id: 8, name: "Intelligence", icon: "brain-circuit", desc: "Prédictions et assistance IA.", steps: [{ a: "Forecasting", t: "Moving Avg" }, { a: "Auto-Order", t: "Velocity Calc" }, { a: "Chat", t: "Gemini API" }] },
+            { id: 9, name: "Inventaire", icon: "package", desc: "Stocks, fournisseurs et DLC.", steps: [{ a: "Scan", t: "Camera/HID" }, { a: "Alertes", t: "Triggers" }, { a: "Transferts", t: "Multi-loc" }] },
+            { id: 10, name: "Staff", icon: "users", desc: "RH, planning et performances.", steps: [{ a: "Access Control", t: "Middleware" }, { a: "Metrics", t: "Sales/Hour" }, { a: "Onboarding", t: "Wizard Flow" }] },
+            { id: 11, name: "Planning", icon: "calendar", desc: "Shifts et congés.", steps: [{ a: "Drag-Drop", t: "dnd-kit" }, { a: "Labor Cost", t: "Live Calc" }, { a: "Mobile View", t: "Responsive" }] },
+            { id: 12, name: "Finance", icon: "landmark", desc: "P&L et trésorerie.", steps: [{ a: "P&L View", t: "Tree Table" }, { a: "Bank Sync", t: "Plaid/GoCardless" }, { a: "Budgets", t: "Variance View" }] },
+            { id: 13, name: "Comptabilité", icon: "receipt", desc: "Exports et TVA.", steps: [{ a: "Journal", t: "Ledger Logic" }, { a: "OCR Factures", t: "Parser" }, { a: "TVA", t: "Tax Rules" }] },
+            { id: 14, name: "CRM", icon: "contact", desc: "Base clients unifiée.", steps: [{ a: "Profile 360", t: "Aggregator" }, { a: "Segmentation", t: "Filter Engine" }, { a: "Tags", t: "Taxonomy" }] },
+            { id: 15, name: "HACCP", icon: "shield-check", desc: "Hygiène et sécurité.", steps: [{ a: "Checklists", t: "Form Builder" }, { a: "IoT Sensors", t: "Bluetooth SDK" }, { a: "Logs", t: "Immutable DB" }] },
+            { id: 16, name: "Social Marketing", icon: "share-2", desc: "Réseaux sociaux.", steps: [{ a: "Scheduler", t: "Calendar" }, { a: "Assets", t: "Storage" }, { a: "Multi-post", t: "API Wrapper" }] },
+            { id: 17, name: "Livraison", icon: "bike", desc: "Agrégateur plateformes.", steps: [{ a: "Order Inject", t: "Webhooks" }, { a: "Menu Sync", t: "Availability" }, { a: "Tracking", t: "Mapbox" }] },
+            { id: 18, name: "Fournisseurs", icon: "truck", desc: "Portail B2B.", steps: [{ a: "Catalog Import", t: "CSV/XML" }, { a: "Purchase Orders", t: "Email Gen" }, { a: "History", t: "Trends" }] },
+            { id: 19, name: "Maintenance", icon: "wrench", desc: "Tickets équipements.", steps: [{ a: "QR Scan", t: "Asset Tag" }, { a: "Tickets", t: "Kanban" }, { a: "Maintenance", t: "Scheduler" }] },
+            { id: 20, name: "Avis Clients", icon: "star", desc: "Réputation en ligne.", steps: [{ a: "Scraper", t: "Review API" }, { a: "Sentiment", t: "NLP Analysis" }, { a: "Auto-Reply", t: "AI Templates" }] },
+            { id: 21, name: "Fidélité", icon: "heart", desc: "Programme de points.", steps: [{ a: "Wallet Pass", t: "PKPass Gen" }, { a: "Rules Engine", t: "Loyalty Logic" }, { a: "Rewards", t: "Campaigns" }] },
+            { id: 22, name: "Événementiel", icon: "party-popper", desc: "Traiteur et privatisations.", steps: [{ a: "BEO", t: "PDF Generation" }, { a: "Deposits", t: "Payment Link" }, { a: "Run Sheet", t: "Timeline" }] },
+            { id: 23, name: "Franchise HQ", icon: "building-2", desc: "Vue groupe multi-sites.", steps: [{ a: "Rollup Data", t: "Aggregations" }, { a: "Menu Push", t: "Deploy Config" }, { a: "Benchmark", t: "Site Comparison" }] },
+            { id: 24, name: "Borne (Kiosk)", icon: "tablet", desc: "Commande client autonome.", steps: [{ a: "Touch UI", t: "Big Buttons" }, { a: "Idle Screen", t: "Video Loop" }, { a: "Hardware", t: "Terminal Pair" }] },
+            { id: 25, name: "Pertes (Waste)", icon: "trash", desc: "Suivi gaspillage.", steps: [{ a: "Input", t: "Scale Integ" }, { a: "Analysis", t: "Cost Calc" }, { a: "Eco-Score", t: "Carbon Est" }] },
+            { id: 26, name: "App Livreurs", icon: "navigation", desc: "Flotte interne.", steps: [{ a: "Routing", t: "Optim Algo" }, { a: "Proof", t: "Signature Pad" }, { a: "GPS", t: "Geolocation" }] },
+            { id: 27, name: "R&D Lab", icon: "flask-conical", desc: "Food costing avancé.", steps: [{ a: "Nutri Calc", t: "USDA DB" }, { a: "Yields", t: "Weight Loss" }, { a: "Versions", t: "Git for Recipes" }] },
+            { id: 28, name: "GED (Docs)", icon: "file-text", desc: "Documents légaux.", steps: [{ a: "Search", t: "Full-Text" }, { a: "Expiry", t: "Cron Jobs" }, { a: "Storage", t: "S3 Buckets" }] }
+        ];
+
+        const container = document.getElementById('modulesContainer');
+
+        modules.forEach(mod => {
+            const prompt = `Generate ${mod.name} module. Requirements: ${mod.steps.map(s => s.a).join(', ')}. Tech: ${mod.steps.map(s => s.t).join(', ')}.`;
+            const card = document.createElement('div');
+            card.className = 'module-card';
+            card.innerHTML = `
+                <div class="module-header">
+                    <div class="module-badge">#${String(mod.id).padStart(2, '0')}</div>
+                    <div class="module-icon"><i data-lucide="${mod.icon}"></i></div>
+                    <div class="module-title">${mod.name}</div>
+                    <div class="module-desc">${mod.desc}</div>
+                </div>
+                <div class="module-steps" id="steps-${mod.id}">
+                    <div class="steps-content">
+                        <ul class="step-list">
+                            ${mod.steps.map(s => `<li class="step-item"><strong>${s.a}</strong><span class="step-tech">${s.t}</span></li>`).join('')}
+                        </ul>
+                        <button class="btn-copy" onclick="copyText(null, '${prompt}')" style="width:100%; justify-content:center;">
+                           <i data-lucide="terminal-square"></i> Copier Prompt
+                        </button>
+                    </div>
+                </div>
+                <div class="module-footer">
+                    <button class="btn-toggle" onclick="toggleWrapper(this, 'steps-${mod.id}')">
+                        <i data-lucide="chevron-down"></i> Détails Tech
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        lucide.createIcons();
+
+        function toggleWrapper(btn, targetId) {
+            const el = document.getElementById(targetId);
+            el.classList.toggle('open');
+            btn.classList.toggle('active');
+        }
+
+        function copyText(elementId, textOverride) {
+            const text = textOverride || document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text);
+            alert('Copié !');
+        }
+
+        function openModal() { document.getElementById('promptModal').classList.add('active'); }
+        function closeModal() { document.getElementById('promptModal').classList.remove('active'); }
+    </script>
+</body>
+
+</html>

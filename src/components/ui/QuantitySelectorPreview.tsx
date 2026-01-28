@@ -17,7 +17,7 @@ export function QuantitySelectorPreview() {
                 {/* Light Mode Preview */}
                 <div className="space-y-4">
                     <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Mode Clair (MC)</p>
-                    <div className="p-12 bg-[#F8F9FA] rounded-2xl flex items-center justify-center border border-neutral-200">
+                    <div className="p-12 bg-bg-tertiary rounded-2xl flex items-center justify-center border border-neutral-200">
                         <QuantitySelector value={q1} onChange={setQ1} />
                     </div>
                 </div>

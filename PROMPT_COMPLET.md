@@ -5482,3 +5482,39 @@ Modélisation:
   - Intégration de l'élasticité prix par catégorie
   - Prédiction de l'impact sur le besoin en staff (coût RH)
 ```
+
+## 31. MODULE 15 : PARAMÈTRES GLOBAUX & PERSISTANCE
+
+### 31.1 Architecture de Persistance (SettingsContext)
+```yaml
+Moteur_de_Persistance:
+  Storage: IndexedDB (Dexie) + LocalStorage (Fallback)
+  Buffering: Edition locale (useState) avec commit atomique (handleSave)
+  Consistency: Détection de changements et indicateurs de sauvegarde temps-réel
+
+Configurations_Critiques:
+  integrations:
+    - Stripe: Clés API (Public/Secret), Webhook Secrets (whsec_*)
+    - Webhooks: Routage d'événements signaux (EVENT_ORDER_COMMIT, etc.)
+    
+  security:
+    - Auth: MFA/2FA obligatoire par rôle
+    - Sessions: Timeout auto (min), Rétention des logs (jours)
+    
+  staff:
+    - Legislation: Plafonds hebdos (35-48h), Temps de repos min
+    - Compensation: Bonus Nuit (%), Bonus Dimanche (%), Bonus Férié (%)
+    - Contrats: Types de contrats (CDI, CDD, Extra)
+    
+  haccp:
+    - IoT: Fréquence de relevé (heures), Intégration capteurs Zigbee
+    - Alerts: Délais d'alerte (min), Délais critiques (min)
+    
+  notifications:
+    - Global: Sons d'alerte système, Mode Ne Pas Déranger (DND)
+    - Channels: Routage Push, SMS, Email par type de sévérité
+    
+  delivery:
+    - Logistics: Zones de livraison (isActive, Fees, Zones de codes postaux)
+    - Node: Temps de prépa min, Max commandes par créneau (Click&Collect)
+```

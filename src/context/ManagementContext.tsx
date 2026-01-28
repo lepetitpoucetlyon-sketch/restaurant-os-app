@@ -1,15 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/lib/db';
 import { useOrders } from './OrdersContext';
 import { useInventory } from './InventoryContext';
 import { useAuth } from './AuthContext';
 import { PRODUCTS } from '@/lib/mock-data';
-import type { MenuAnalysis, StaffPerformance, WasteLog, Order, OrderItem } from '@/types';
+import type { MenuAnalysis, StaffPerformance, WasteLog } from '@/types';
 
 /**
  * MANAGEMENT CONTEXT
- * Handles high-level strategic data: Menu Engineering, RH Performance, and Waste.
+ * Handles high-level strategic data: Menu Engineering, RH Performance, and Waste via Dexie.js.
  */
 
 interface ManagementContextType {
@@ -19,7 +21,7 @@ interface ManagementContextType {
     staffPerformance: StaffPerformance[];
     // Waste Tracking
     wasteLogs: WasteLog[];
-    addWasteLog: (log: Omit<WasteLog, 'id' | 'timestamp'>) => void;
+    addWasteLog: (log: Omit<WasteLog, 'id' | 'timestamp'>) => Promise<void>;
     // Labor Metrics
     laborCostRatio: number; // Labor Cost / Revenue
     activeStaffCount: number;
@@ -31,9 +33,10 @@ export function ManagementProvider({ children }: { children: ReactNode }) {
     const { orders, totalRevenue } = useOrders();
     const { ingredients } = useInventory();
     const { users } = useAuth();
-    const [wasteLogs, setWasteLogs] = useState<WasteLog[]>([]);
 
-    // 1. Menu Engineering (Star, Plowhorse, Puzzle, Dog)
+    const wasteLogs = useLiveQuery(() => db.wasteLogs.orderBy('timestamp').reverse().toArray()) || [];
+
+    // 1. Menu Engineering
     const menuAnalysis: MenuAnalysis[] = useMemo(() => {
         const itemSales = orders
             .filter(o => o.status === 'paid' || o.status === 'delivered')
@@ -45,25 +48,20 @@ export function ManagementProvider({ children }: { children: ReactNode }) {
 
         const analysis: MenuAnalysis[] = PRODUCTS.map(product => {
             const popularity = itemSales[product.id] || 0;
-
-            // Calculate food cost for this product
             const foodCost = product.ingredients?.reduce((sum, pi) => {
                 const ing = ingredients.find(i => i.id === pi.ingredientId);
                 return sum + (pi.quantity * (ing?.cost || 0));
             }, 0) || 0;
 
-            const profitability = product.price - foodCost;
-
             return {
                 productId: product.id,
                 name: product.name,
-                profitability,
+                profitability: product.price - foodCost,
                 popularity,
-                category: 'dog' // Placeholder
+                category: 'dog'
             };
         });
 
-        // Determine categories based on averages
         const avgPopularity = analysis.reduce((sum, item) => sum + item.popularity, 0) / (analysis.length || 1);
         const avgProfitability = analysis.reduce((sum, item) => sum + item.profitability, 0) / (analysis.length || 1);
 
@@ -88,8 +86,6 @@ export function ManagementProvider({ children }: { children: ReactNode }) {
                 const serverOrders = orders.filter(o => o.serverName === user.name);
                 const totalSales = serverOrders.reduce((sum, o) => sum + o.total, 0);
                 const orderCount = serverOrders.length;
-
-                // Upsell rate: % of orders with drinks (cocktails category)
                 const upsellOrders = serverOrders.filter(o =>
                     o.items.some(item => {
                         const p = PRODUCTS.find(prod => prod.id === item.productId);
@@ -111,22 +107,19 @@ export function ManagementProvider({ children }: { children: ReactNode }) {
 
     // 3. Labor Cost
     const laborCostRatio = useMemo(() => {
-        // Assume active staff average hourly rate is 15€
-        const activeStaff = users.length; // Simplified
+        const activeStaff = users.length;
         const estimatedHourlyLabor = activeStaff * 15;
         const currentRevenue = totalRevenue || 1;
-
-        // Labor cost for current shift (simulated for demo)
         return (estimatedHourlyLabor * 8) / currentRevenue;
     }, [totalRevenue, users]);
 
-    const addWasteLog = (log: Omit<WasteLog, 'id' | 'timestamp'>) => {
+    const addWasteLog = async (log: Omit<WasteLog, 'id' | 'timestamp'>) => {
         const newLog: WasteLog = {
             ...log,
-            id: `waste_${Math.random().toString(36).substr(2, 9)}`,
+            id: `waste_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             timestamp: new Date()
         };
-        setWasteLogs(prev => [newLog, ...prev]);
+        await db.wasteLogs.add(newLog);
     };
 
     return (

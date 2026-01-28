@@ -32,533 +32,387 @@ import {
     Wine,
     Utensils,
     Tag,
-    Send
+    Send,
+    X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
-
-// Mock CRM Customers
-const MOCK_CUSTOMERS = [
-    {
-        id: 'CRM001',
-        name: 'Marie Dupont',
-        email: 'marie.dupont@email.com',
-        phone: '06 12 34 56 78',
-        segment: 'vip',
-        totalVisits: 24,
-        totalSpent: 2840.00,
-        avgSpend: 118.33,
-        lastVisit: '2026-01-03',
-        firstVisit: '2024-06-15',
-        birthday: '1985-03-15',
-        preferences: ['Vin blanc', 'Table terrasse', 'Allergique fruits de mer'],
-        notes: 'Cliente fidèle, préfère être servie par Alexandre',
-        tags: ['VIP', 'Entreprise', 'Anniversaire traité'],
-        reservationHistory: [
-            { date: '2026-01-03', time: '20:00', guests: 2, spent: 156.00 },
-            { date: '2025-12-20', time: '19:30', guests: 4, spent: 312.00 },
-            { date: '2025-11-15', time: '20:30', guests: 2, spent: 142.00 },
-        ],
-    },
-    {
-        id: 'CRM002',
-        name: 'Jean Martin',
-        email: 'jean.martin@gmail.com',
-        phone: '06 98 76 54 32',
-        segment: 'regular',
-        totalVisits: 8,
-        totalSpent: 720.00,
-        avgSpend: 90.00,
-        lastVisit: '2025-12-28',
-        firstVisit: '2025-03-10',
-        birthday: '1990-07-22',
-        preferences: ['Vin rouge Bordeaux', 'Menu dégustation'],
-        notes: '',
-        tags: ['Couple', 'Gastronomie'],
-        reservationHistory: [
-            { date: '2025-12-28', time: '20:00', guests: 2, spent: 98.00 },
-            { date: '2025-11-05', time: '19:00', guests: 2, spent: 112.00 },
-        ],
-    },
-    {
-        id: 'CRM003',
-        name: 'Sophie Bernard',
-        email: 'sophie.b@email.com',
-        phone: '06 11 22 33 44',
-        segment: 'new',
-        totalVisits: 1,
-        totalSpent: 86.00,
-        avgSpend: 86.00,
-        lastVisit: '2025-12-30',
-        firstVisit: '2025-12-30',
-        birthday: null,
-        preferences: [],
-        notes: 'Première visite suite à une recommandation Instagram',
-        tags: ['Nouveau', 'Instagram'],
-        reservationHistory: [
-            { date: '2025-12-30', time: '20:30', guests: 2, spent: 86.00 },
-        ],
-    },
-    {
-        id: 'CRM004',
-        name: 'Pierre Leroy',
-        email: 'p.leroy@business.com',
-        phone: '06 55 66 77 88',
-        segment: 'vip',
-        totalVisits: 32,
-        totalSpent: 4560.00,
-        avgSpend: 142.50,
-        lastVisit: '2026-01-04',
-        firstVisit: '2023-11-20',
-        birthday: '1978-11-08',
-        preferences: ['Champagne', 'Carré VIP', 'Repas affaires'],
-        notes: 'CEO Tech company, réunions business fréquentes',
-        tags: ['VIP', 'Business', 'High-spender'],
-        reservationHistory: [],
-    },
-    {
-        id: 'CRM005',
-        name: 'Claire Moreau',
-        email: 'claire.m@outlook.com',
-        phone: '06 99 88 77 66',
-        segment: 'lost',
-        totalVisits: 5,
-        totalSpent: 340.00,
-        avgSpend: 68.00,
-        lastVisit: '2025-06-15',
-        firstVisit: '2024-12-10',
-        birthday: '1995-01-20',
-        preferences: ['Végétarienne'],
-        notes: 'À réactiver - dernière visite il y a 6 mois',
-        tags: ['À réactiver', 'Végétarienne'],
-        reservationHistory: [],
-    },
-];
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { staggerContainer, fadeInUp, cardHover, easing } from "@/lib/motion";
+import { useLanguage } from "@/context/LanguageContext";
+import { PremiumSelect, SecurityPinModal } from "@/components/ui";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { useCRM } from "@/context/CRMContext";
+import { useAuth } from "@/context/AuthContext";
+import { Customer } from "@/types";
+import { useIsMobile } from "@/hooks";
 
 const SEGMENTS = {
     vip: { name: 'VIP', color: '#8B5CF6', icon: Star },
-    regular: { name: 'Régulier', color: '#00D764', icon: Heart },
+    regular: { name: 'Régulier', color: '#C5A059', icon: Heart },
     new: { name: 'Nouveau', color: '#4285F4', icon: Plus },
     lost: { name: 'À réactiver', color: '#FF9900', icon: AlertCircle },
 };
 
 export default function CRMPage() {
+    const isMobile = useIsMobile();
     const { showToast } = useToast();
+    const { t } = useLanguage();
+    const { customers, updateCustomer, deleteCustomer, addCustomer, isLoading } = useCRM();
+    const { canDo, logAction } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterSegment, setFilterSegment] = useState<string | null>(null);
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
     const [showNewCustomer, setShowNewCustomer] = useState(false);
+    const [showSecurityModal, setShowSecurityModal] = useState(false);
+    const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
-    const filteredCustomers = MOCK_CUSTOMERS.filter(c => {
-        if (filterSegment && c.segment !== filterSegment) return false;
-        if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !c.email.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    // New Customer Form State
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
+    const [birthday, setBirthday] = useState('');
+    const [segment, setSegment] = useState('new');
+    const [notes, setNotes] = useState('');
+
+    const filteredCustomers = customers.filter(c => {
+        const cName = (c as any).name || `${c.firstName} ${c.lastName}`;
+        const cEmail = c.email || '';
+        if (filterSegment && (c as any).segment !== filterSegment) return false;
+        if (searchQuery && !cName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            !cEmail.toLowerCase().includes(searchQuery.toLowerCase()) &&
             !c.phone.includes(searchQuery)) return false;
         return true;
     });
 
     const stats = {
-        total: MOCK_CUSTOMERS.length,
-        vip: MOCK_CUSTOMERS.filter(c => c.segment === 'vip').length,
-        totalRevenue: MOCK_CUSTOMERS.reduce((sum, c) => sum + c.totalSpent, 0),
-        avgLifetimeValue: MOCK_CUSTOMERS.reduce((sum, c) => sum + c.totalSpent, 0) / MOCK_CUSTOMERS.length,
+        total: customers.length,
+        vip: customers.filter(c => (c as any).segment === 'vip').length,
+        totalRevenue: customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0),
     };
 
-    const handleSendEmail = (customer: any) => {
-        showToast(`Email envoyé à ${customer.email}`, "success");
+    const handleDeleteClick = (customer: Customer, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCustomerToDelete(customer);
+        setShowSecurityModal(true);
     };
 
-    const handleSendSMS = (customer: any) => {
-        showToast(`SMS envoyé au ${customer.phone}`, "success");
+    const confirmDeleteCustomer = async () => {
+        if (customerToDelete) {
+            try {
+                await deleteCustomer(customerToDelete.id);
+                showToast(t('crm.customer_deleted'), "success");
+                setShowSecurityModal(false);
+                setCustomerToDelete(null);
+                if (selectedCustomer?.id === customerToDelete.id) {
+                    setSelectedCustomer(null);
+                }
+            } catch (error) {
+                showToast(t('crm.delete_error'), "error");
+            }
+        }
+    };
+
+    const handleCRMAction = (action: string, customer: any) => {
+        showToast(`${action} pour ${customer.firstName}`, "info");
     };
 
     return (
-        <div className="flex h-[calc(100vh-70px)] -m-6 bg-[#F8F9FA] overflow-hidden">
-            {/* Sidebar - Filters */}
-            <div className="w-72 bg-white border-r border-neutral-100 p-6 flex flex-col">
-                <div className="mb-6">
-                    <h1 className="text-xl font-black text-[#1A1A1A] tracking-tight">CRM Clients</h1>
-                    <p className="text-[11px] font-bold text-[#ADB5BD] uppercase tracking-wider mt-1">
-                        {MOCK_CUSTOMERS.length} clients
-                    </p>
-                </div>
-
-                {/* Search */}
-                <div className="relative mb-6">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ADB5BD]" />
-                    <input
-                        type="text"
-                        placeholder="Rechercher..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-10 pl-10 pr-4 bg-[#F8F9FA] rounded-xl border-2 border-transparent focus:border-[#1A1A1A] font-bold text-sm outline-none"
-                    />
-                </div>
-
-                {/* Segment Filters */}
-                <div className="space-y-2 flex-1">
-                    <button
-                        onClick={() => setFilterSegment(null)}
-                        className={cn(
-                            "w-full flex items-center justify-between p-3 rounded-xl transition-all",
-                            !filterSegment ? "bg-[#1A1A1A] text-white" : "hover:bg-[#F8F9FA]"
-                        )}
-                    >
-                        <div className="flex items-center gap-3">
-                            <Users className="w-5 h-5" />
-                            <span className="font-bold">Tous les clients</span>
-                        </div>
-                        <span className="text-sm font-black">{MOCK_CUSTOMERS.length}</span>
-                    </button>
-
-                    {Object.entries(SEGMENTS).map(([key, segment]) => {
-                        const Icon = segment.icon;
-                        const count = MOCK_CUSTOMERS.filter(c => c.segment === key).length;
-                        return (
-                            <button
-                                key={key}
-                                onClick={() => setFilterSegment(filterSegment === key ? null : key)}
-                                className={cn(
-                                    "w-full flex items-center justify-between p-3 rounded-xl transition-all",
-                                    filterSegment === key ? "bg-[#F8F9FA] border-2 border-[#1A1A1A]" : "hover:bg-[#F8F9FA]"
-                                )}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div
-                                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                        style={{ backgroundColor: `${segment.color}15` }}
-                                    >
-                                        <Icon className="w-4 h-4" style={{ color: segment.color }} />
-                                    </div>
-                                    <span className="font-bold text-sm">{segment.name}</span>
-                                </div>
-                                <span className="text-sm font-bold text-[#ADB5BD]">{count}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Quick Stats */}
-                <div className="pt-4 border-t border-neutral-100 space-y-3">
-                    <div className="p-3 bg-[#F8F9FA] rounded-xl">
-                        <p className="text-[10px] font-bold text-[#ADB5BD] uppercase">CA Total Clients</p>
-                        <p className="text-lg font-black text-[#1A1A1A]">{stats.totalRevenue.toLocaleString('fr-FR')} €</p>
+        <div className="flex h-screen -m-4 md:-m-8 bg-bg-primary overflow-hidden relative">
+            {/* Desktop Sidebar */}
+            {!isMobile && (
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="w-[380px] bg-bg-secondary border-r border-border p-10 flex flex-col z-20"
+                >
+                    <div className="mb-20">
+                        <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.4em] mb-4">{t('crm.database_title')}</p>
+                        <h1 className="text-5xl font-serif text-text-primary italic tracking-tight leading-tight">
+                            {t('crm.concierge_title')} <br />
+                            <span className="text-text-muted/20 font-light not-italic">{t('crm.clients_subtitle')}</span>
+                        </h1>
                     </div>
-                    <div className="p-3 bg-[#F8F9FA] rounded-xl">
-                        <p className="text-[10px] font-bold text-[#ADB5BD] uppercase">Valeur vie moyenne</p>
-                        <p className="text-lg font-black text-[#00D764]">{stats.avgLifetimeValue.toFixed(0)} €</p>
+
+                    <div className="relative mb-16">
+                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30" />
+                        <input
+                            type="text"
+                            placeholder={t('crm.search_placeholder')}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-16 pl-16 pr-8 bg-bg-tertiary/50 rounded-[2rem] border-none font-sans font-black text-[10px] text-text-primary outline-none tracking-widest focus:bg-bg-tertiary transition-all"
+                        />
                     </div>
-                </div>
-            </div>
 
-            {/* Main Content - Customer List */}
-            <div className="flex-1 overflow-auto p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-black text-[#1A1A1A]">
-                        {filterSegment ? SEGMENTS[filterSegment as keyof typeof SEGMENTS].name : 'Tous les clients'}
-                    </h2>
-                    <div className="flex gap-3">
-                        <Button variant="outline" className="h-10 rounded-xl">
-                            <Download className="w-4 h-4 mr-2" />
-                            Exporter
-                        </Button>
-                        <Button onClick={() => setShowNewCustomer(true)} className="h-10 bg-[#1A1A1A] rounded-xl">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Ajouter Client
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="space-y-3">
-                    {filteredCustomers.map((customer) => {
-                        const segment = SEGMENTS[customer.segment as keyof typeof SEGMENTS];
-                        const SegmentIcon = segment.icon;
-                        return (
-                            <div
-                                key={customer.id}
-                                className="bg-white rounded-2xl p-5 border border-neutral-100 hover:shadow-lg transition-all cursor-pointer"
-                                onClick={() => setSelectedCustomer(customer)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        {/* Avatar */}
-                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1A1A1A] to-[#2D2D2D] flex items-center justify-center">
-                                            <span className="text-white font-black text-lg">
-                                                {customer.name.split(' ').map((n: string) => n[0]).join('')}
-                                            </span>
-                                        </div>
-
-                                        {/* Info */}
-                                        <div>
-                                            <div className="flex items-center gap-3">
-                                                <h4 className="font-black text-lg text-[#1A1A1A]">{customer.name}</h4>
-                                                <span
-                                                    className="px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1"
-                                                    style={{ backgroundColor: `${segment.color}15`, color: segment.color }}
-                                                >
-                                                    <SegmentIcon className="w-3 h-3" />
-                                                    {segment.name}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-4 mt-1 text-[12px] text-[#6C757D]">
-                                                <span className="flex items-center gap-1">
-                                                    <Mail className="w-3.5 h-3.5" />
-                                                    {customer.email}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Phone className="w-3.5 h-3.5" />
-                                                    {customer.phone}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-8">
-                                        {/* Stats */}
-                                        <div className="text-center">
-                                            <p className="font-black text-[#1A1A1A]">{customer.totalVisits}</p>
-                                            <p className="text-[10px] text-[#ADB5BD]">Visites</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="font-black text-[#00D764]">{customer.totalSpent.toFixed(0)}€</p>
-                                            <p className="text-[10px] text-[#ADB5BD]">Total dépensé</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="font-bold text-[#6C757D]">{customer.lastVisit}</p>
-                                            <p className="text-[10px] text-[#ADB5BD]">Dernière visite</p>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-9 w-9 p-0 rounded-lg"
-                                                onClick={(e) => { e.stopPropagation(); handleSendEmail(customer); }}
-                                            >
-                                                <Mail className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-9 w-9 p-0 rounded-lg"
-                                                onClick={(e) => { e.stopPropagation(); handleSendSMS(customer); }}
-                                            >
-                                                <MessageSquare className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-9 w-9 p-0 rounded-lg"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <MoreVertical className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Tags */}
-                                {customer.tags.length > 0 && (
-                                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-neutral-50">
-                                        <Tag className="w-3.5 h-3.5 text-[#ADB5BD]" />
-                                        {customer.tags.map((tag: string, i: number) => (
-                                            <span key={i} className="px-2 py-1 bg-[#F8F9FA] rounded-md text-[10px] font-bold text-[#6C757D]">
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Customer Detail Panel */}
-            {selectedCustomer && (
-                <div className="w-96 bg-white border-l border-neutral-100 overflow-auto">
-                    <div className="p-6 border-b border-neutral-100 bg-gradient-to-br from-[#1A1A1A] to-[#2D2D2D] text-white">
+                    <div className="space-y-4 flex-1">
                         <button
-                            onClick={() => setSelectedCustomer(null)}
-                            className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg"
+                            onClick={() => setFilterSegment(null)}
+                            className={cn(
+                                "w-full flex items-center justify-between px-8 py-5 rounded-[2rem] transition-all relative group",
+                                !filterSegment ? "bg-accent-gold/10 text-accent-gold" : "text-text-muted hover:bg-bg-tertiary"
+                            )}
                         >
-                            ×
+                            <div className="flex items-center gap-5 relative z-10">
+                                <Users className={cn("w-5 h-5", !filterSegment ? "text-accent-gold" : "text-text-muted/30")} />
+                                <span className="font-black text-[11px] tracking-[0.2em] uppercase">{t('crm.global_portfolio')}</span>
+                            </div>
+                            <span className="text-[10px] font-mono font-bold opacity-50">{customers.length}</span>
                         </button>
-                        <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
-                            <span className="text-2xl font-black">
-                                {selectedCustomer.name.split(' ').map((n: string) => n[0]).join('')}
-                            </span>
-                        </div>
-                        <h3 className="text-xl font-black">{selectedCustomer.name}</h3>
-                        <p className="text-white/60 text-sm mt-1">{selectedCustomer.email}</p>
-                    </div>
 
-                    <div className="p-6 space-y-6">
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="p-3 bg-[#F8F9FA] rounded-xl text-center">
-                                <p className="text-xl font-black text-[#1A1A1A]">{selectedCustomer.totalVisits}</p>
-                                <p className="text-[10px] font-bold text-[#ADB5BD]">Visites</p>
-                            </div>
-                            <div className="p-3 bg-[#F8F9FA] rounded-xl text-center">
-                                <p className="text-xl font-black text-[#00D764]">{selectedCustomer.totalSpent.toFixed(0)}€</p>
-                                <p className="text-[10px] font-bold text-[#ADB5BD]">Total</p>
-                            </div>
-                            <div className="p-3 bg-[#F8F9FA] rounded-xl text-center">
-                                <p className="text-xl font-black text-[#1A1A1A]">{selectedCustomer.avgSpend.toFixed(0)}€</p>
-                                <p className="text-[10px] font-bold text-[#ADB5BD]">Moy/visite</p>
-                            </div>
-                        </div>
-
-                        {/* Contact Info */}
-                        <div>
-                            <h4 className="text-[11px] font-black text-[#ADB5BD] uppercase mb-3">Contact</h4>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F8F9FA]">
-                                    <Phone className="w-4 h-4 text-[#6C757D]" />
-                                    <span className="text-sm font-bold">{selectedCustomer.phone}</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F8F9FA]">
-                                    <Mail className="w-4 h-4 text-[#6C757D]" />
-                                    <span className="text-sm font-bold">{selectedCustomer.email}</span>
-                                </div>
-                                {selectedCustomer.birthday && (
-                                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F8F9FA]">
-                                        <Cake className="w-4 h-4 text-[#E4405F]" />
-                                        <span className="text-sm font-bold">{selectedCustomer.birthday}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Preferences */}
-                        {selectedCustomer.preferences.length > 0 && (
-                            <div>
-                                <h4 className="text-[11px] font-black text-[#ADB5BD] uppercase mb-3">Préférences</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedCustomer.preferences.map((pref: string, i: number) => (
-                                        <span key={i} className="px-3 py-1.5 bg-[#F8F9FA] rounded-lg text-sm font-bold text-[#1A1A1A]">
-                                            {pref}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Notes */}
-                        {selectedCustomer.notes && (
-                            <div>
-                                <h4 className="text-[11px] font-black text-[#ADB5BD] uppercase mb-3">Notes</h4>
-                                <p className="text-sm text-[#6C757D] p-3 bg-[#F8F9FA] rounded-xl">
-                                    {selectedCustomer.notes}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Reservation History */}
-                        {selectedCustomer.reservationHistory.length > 0 && (
-                            <div>
-                                <h4 className="text-[11px] font-black text-[#ADB5BD] uppercase mb-3">Historique</h4>
-                                <div className="space-y-2">
-                                    {selectedCustomer.reservationHistory.map((res: any, i: number) => (
-                                        <div key={i} className="flex items-center justify-between p-3 bg-[#F8F9FA] rounded-xl">
-                                            <div>
-                                                <p className="font-bold text-sm">{res.date}</p>
-                                                <p className="text-[11px] text-[#6C757D]">{res.time} • {res.guests} pers.</p>
-                                            </div>
-                                            <span className="font-black text-[#00D764]">{res.spent.toFixed(0)}€</span>
+                        {Object.entries(SEGMENTS).map(([key, segment]) => {
+                            const Icon = segment.icon;
+                            const count = customers.filter(c => (c as any).segment === key).length;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => setFilterSegment(filterSegment === key ? null : key)}
+                                    className={cn("w-full flex items-center justify-between px-8 py-5 rounded-[2rem] transition-all", filterSegment === key ? "text-text-primary bg-bg-tertiary/50" : "text-text-muted hover:bg-bg-tertiary")}
+                                >
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center border border-border bg-bg-primary">
+                                            <Icon className="w-5 h-5" style={{ color: segment.color }} />
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex gap-3 pt-4 border-t border-neutral-100">
-                            <Button
-                                className="flex-1 h-11 bg-[#1A1A1A] rounded-xl"
-                                onClick={() => showToast("Nouvelle réservation pour " + selectedCustomer.name, "info")}
-                            >
-                                <Calendar className="w-4 h-4 mr-2" />
-                                Réserver
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="flex-1 h-11 rounded-xl"
-                                onClick={() => handleSendEmail(selectedCustomer)}
-                            >
-                                <Send className="w-4 h-4 mr-2" />
-                                Contacter
-                            </Button>
-                        </div>
+                                        <span className="font-black text-[11px] tracking-[0.2em] uppercase">{t(`crm.segments.${key}`)}</span>
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold opacity-50">{count}</span>
+                                </button>
+                            );
+                        })}
                     </div>
-                </div>
+                </motion.div>
             )}
 
-            {/* New Customer Modal */}
-            {showNewCustomer && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
-                        <div className="p-6 border-b border-neutral-100">
-                            <h2 className="text-xl font-black text-[#1A1A1A]">Nouveau Client</h2>
+            {/* Main Content */}
+            <div className="flex-1 overflow-auto bg-bg-primary p-6 md:p-12 md:pt-16 elegant-scrollbar flex flex-col pb-32 md:pb-0">
+                <div className="max-w-7xl mx-auto w-full">
+                    {/* Mobile Header & Search */}
+                    {isMobile && (
+                        <div className="mb-8 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h1 className="text-4xl font-serif text-text-primary italic tracking-tight">{t('crm.concierge_title')}</h1>
+                                <button onClick={() => setShowNewCustomer(true)} className="w-12 h-12 rounded-full bg-text-primary text-white flex items-center justify-center">
+                                    <Plus className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30" />
+                                <input
+                                    type="text"
+                                    placeholder={t('crm.search_placeholder')}
+                                    className="w-full h-14 pl-14 pr-6 bg-bg-tertiary/50 rounded-2xl border-none text-[10px] font-black uppercase tracking-widest outline-none"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            {/* Horizontal Segment Scroll */}
+                            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 px-1">
+                                <button
+                                    onClick={() => setFilterSegment(null)}
+                                    className={cn("whitespace-nowrap px-6 h-11 rounded-full text-[9px] font-black uppercase tracking-widest transition-all", !filterSegment ? "bg-accent-gold text-white" : "bg-bg-tertiary text-text-muted")}
+                                >
+                                    {t('crm.all_clients')}
+                                </button>
+                                {Object.entries(SEGMENTS).map(([key, segment]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setFilterSegment(key)}
+                                        className={cn("whitespace-nowrap px-6 h-11 rounded-full text-[9px] font-black uppercase tracking-widest transition-all", filterSegment === key ? "bg-text-primary text-white" : "bg-bg-tertiary text-text-muted")}
+                                    >
+                                        {t(`crm.segments.${key}`)}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <form className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-[11px] font-black text-[#ADB5BD] uppercase">Nom</label>
-                                    <input
-                                        type="text"
-                                        className="w-full h-11 px-4 mt-1 bg-[#F8F9FA] rounded-xl border-2 border-transparent focus:border-[#1A1A1A] font-bold outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[11px] font-black text-[#ADB5BD] uppercase">Téléphone</label>
-                                    <input
-                                        type="tel"
-                                        className="w-full h-11 px-4 mt-1 bg-[#F8F9FA] rounded-xl border-2 border-transparent focus:border-[#1A1A1A] font-bold outline-none"
-                                    />
-                                </div>
+                    )}
+
+                    {/* Desktop Toolbar */}
+                    {!isMobile && (
+                        <div className="flex items-start justify-between mb-16 px-4">
+                            <h2 className="text-4xl font-serif text-text-primary italic">{filterSegment ? t(`crm.segments.${filterSegment}`) : t('crm.all_clients')}</h2>
+                            <div className="flex gap-4">
+                                <Button onClick={() => setShowNewCustomer(true)} className="h-14 bg-text-primary dark:bg-white hover:bg-black dark:hover:bg-neutral-100 rounded-2xl text-bg-secondary dark:text-bg-primary text-[10px] font-black uppercase tracking-[0.2em] px-10 shadow-2xl">
+                                    <Plus className="w-4 h-4 mr-3" strokeWidth={3} />
+                                    {t('crm.new_profile')}
+                                </Button>
                             </div>
-                            <div>
-                                <label className="text-[11px] font-black text-[#ADB5BD] uppercase">Email</label>
-                                <input
-                                    type="email"
-                                    className="w-full h-11 px-4 mt-1 bg-[#F8F9FA] rounded-xl border-2 border-transparent focus:border-[#1A1A1A] font-bold outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[11px] font-black text-[#ADB5BD] uppercase">Date d'anniversaire</label>
-                                <input
-                                    type="date"
-                                    className="w-full h-11 px-4 mt-1 bg-[#F8F9FA] rounded-xl border-2 border-transparent focus:border-[#1A1A1A] font-bold outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[11px] font-black text-[#ADB5BD] uppercase">Notes / Préférences</label>
-                                <textarea
-                                    className="w-full h-20 px-4 py-3 mt-1 bg-[#F8F9FA] rounded-xl border-2 border-transparent focus:border-[#1A1A1A] font-bold outline-none resize-none"
-                                />
-                            </div>
-                        </form>
-                        <div className="p-6 bg-[#F8F9FA] flex gap-3">
-                            <Button variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => setShowNewCustomer(false)}>
-                                Annuler
-                            </Button>
-                            <Button
-                                className="flex-1 h-12 bg-[#00D764] hover:bg-[#00B956] rounded-xl"
-                                onClick={() => {
-                                    showToast("Client ajouté au CRM", "success");
-                                    setShowNewCustomer(false);
-                                }}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+                        {filteredCustomers.map((customer, i) => (
+                            <motion.div
+                                key={customer.id}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: i * 0.03 }}
+                                className="bg-white dark:bg-bg-secondary p-4 md:p-6 rounded-[2rem] md:rounded-[3rem] flex items-center justify-between group cursor-pointer hover:shadow-xl transition-all border border-neutral-100 dark:border-border/50 h-28 md:h-36"
+                                onClick={() => setSelectedCustomer(customer)}
                             >
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Créer le client
-                            </Button>
-                        </div>
+                                <div className="flex items-center gap-4 md:gap-8">
+                                    <div className="relative shrink-0">
+                                        <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-bg-tertiary flex items-center justify-center border border-border shadow-inner">
+                                            <span className="text-text-primary font-serif italic text-xl md:text-3xl">
+                                                {customer.firstName[0]}{customer.lastName[0]}
+                                            </span>
+                                        </div>
+                                        <div className="absolute top-0 right-0 w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#3B82F6] border-[2px] md:border-[3px] border-white dark:border-bg-secondary" />
+                                    </div>
+                                    <div className="space-y-1 md:space-y-3">
+                                        <h3 className="text-xl md:text-4xl font-serif text-text-primary italic tracking-tight leading-none">
+                                            {customer.firstName[0]}. {customer.lastName}
+                                        </h3>
+                                        <span className="inline-flex px-3 py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest bg-bg-tertiary text-text-muted/60">
+                                            {t(`crm.segments.${(customer as any).segment || 'new'}`)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 md:gap-12 mr-2 md:mr-8 text-right">
+                                    <div className="hidden sm:block">
+                                        <p className="text-[7px] md:text-[9px] font-black text-text-muted/40 uppercase tracking-widest">VISITES</p>
+                                        <p className="text-lg md:text-3xl font-serif italic text-text-primary">{customer.visitCount}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[7px] md:text-[9px] font-black text-text-muted/40 uppercase tracking-widest">TOTAL</p>
+                                        <p className="text-lg md:text-3xl font-serif italic text-accent-gold">{customer.totalSpent.toFixed(0)}€</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
+            </div>
+
+            {/* Customer Detail Sheet/Panel */}
+            <AnimatePresence>
+                {selectedCustomer && (
+                    isMobile ? (
+                        <BottomSheet
+                            isOpen={true}
+                            onClose={() => setSelectedCustomer(null)}
+                            title={selectedCustomer.name}
+                            subtitle={`Profil ${selectedCustomer.segment.toUpperCase()} • ID: ${selectedCustomer.id.slice(0, 8)}`}
+                        >
+                            <div className="space-y-10 py-6">
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        { value: selectedCustomer.visitCount, label: 'Sessions', icon: Users },
+                                        { value: `${selectedCustomer.totalSpent.toFixed(0)}€`, label: 'Revenue', icon: DollarSign, gold: true },
+                                        { value: `${(selectedCustomer.totalSpent / (selectedCustomer.visitCount || 1)).toFixed(0)}€`, label: 'Panier', icon: TrendingUp }
+                                    ].map((s, i) => (
+                                        <div key={i} className="bg-bg-tertiary p-5 rounded-[2rem] text-center border border-border/50">
+                                            <p className={cn("text-xl font-serif italic", s.gold ? "text-accent-gold" : "text-text-primary")}>{s.value}</p>
+                                            <p className="text-[7px] font-black text-text-muted/50 uppercase tracking-widest mt-1">{t(s.label)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="space-y-3">
+                                    <h4 className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] px-2">{t('crm.contact_info')}</h4>
+                                    <div className="p-5 bg-bg-tertiary rounded-3xl flex items-center gap-5">
+                                        <Phone className="w-5 h-5 text-accent-gold/40" />
+                                        <p className="text-sm font-bold tracking-[0.1em]">{selectedCustomer.phone}</p>
+                                    </div>
+                                    <div className="p-5 bg-bg-tertiary rounded-3xl flex items-center gap-5">
+                                        <Mail className="w-5 h-5 text-accent-gold/40" />
+                                        <p className="text-xs font-bold uppercase tracking-widest text-text-primary">{selectedCustomer.email}</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 pt-6">
+                                    <Button className="h-16 rounded-2xl bg-text-primary text-white text-[10px] font-black uppercase tracking-widest">
+                                        <Calendar className="w-4 h-4 mr-2" />
+                                        Réserver
+                                    </Button>
+                                    <Button variant="outline" className="h-16 rounded-2xl border-border text-[10px] font-black uppercase tracking-widest">
+                                        <Send className="w-4 h-4 mr-2" />
+                                        Message
+                                    </Button>
+                                </div>
+                            </div>
+                        </BottomSheet>
+                    ) : (
+                        <motion.div
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            className="fixed right-0 top-[70px] h-[calc(100vh-70px)] w-[450px] bg-bg-secondary border-l border-border z-40 shadow-2xl overflow-auto elegant-scrollbar"
+                        >
+                            {/* Desktop Detail Content - Retaining existing high-end design */}
+                            <div className="p-10 border-b border-border bg-text-primary text-white relative overflow-hidden">
+                                <button onClick={() => setSelectedCustomer(null)} className="absolute top-6 right-6 w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-all z-20">
+                                    <X className="w-6 h-6" />
+                                </button>
+                                <div className="relative z-10">
+                                    <div className="w-24 h-24 rounded-[2.5rem] bg-white/10 flex items-center justify-center mb-8 border border-white/20">
+                                        <span className="text-4xl font-serif italic">{selectedCustomer.firstName[0]}{selectedCustomer.lastName[0]}</span>
+                                    </div>
+                                    <h3 className="text-5xl font-serif italic mb-4 tracking-tight leading-none">{selectedCustomer.firstName} {selectedCustomer.lastName}</h3>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-2 h-2 rounded-full bg-accent-gold" />
+                                        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/40">VIP PRIVILÈGE • {selectedCustomer.id.slice(0, 8)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-10 space-y-10">
+                                {/* Stats & Metrics */}
+                                <div className="grid grid-cols-3 gap-4">
+                                    {[{ v: selectedCustomer.visitCount, l: 'Visites' }, { v: `${selectedCustomer.totalSpent.toFixed(0)}€`, l: 'Total', g: true }, { v: '12%', l: 'Reward' }].map((st, i) => (
+                                        <div key={i} className="bg-bg-tertiary p-6 rounded-[2rem] text-center border border-border/40">
+                                            <p className={cn("text-2xl font-serif italic", st.g ? "text-accent-gold" : "text-text-primary")}>{st.v}</p>
+                                            <p className="text-[7px] font-black text-text-muted/40 uppercase tracking-[0.2em] mt-1">{st.l}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Contact */}
+                                <div className="space-y-4">
+                                    <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em]">{t('crm.contact_info')}</p>
+                                    <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-bg-tertiary border border-border/40 hover:border-accent-gold/20 transition-all">
+                                        <Phone className="w-4 h-4 text-accent-gold" />
+                                        <p className="text-sm font-bold tracking-widest">{selectedCustomer.phone}</p>
+                                    </div>
+                                    <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-bg-tertiary border border-border/40 hover:border-accent-gold/20 transition-all">
+                                        <Mail className="w-4 h-4 text-accent-gold" />
+                                        <p className="text-sm font-bold uppercase tracking-widest">{selectedCustomer.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )
+                )}
+            </AnimatePresence>
+
+            {/* New Customer Sheet (Mobile) / Modal (Desktop) */}
+            <BottomSheet
+                isOpen={isMobile && showNewCustomer}
+                onClose={() => setShowNewCustomer(false)}
+                title={t('crm.new_profile')}
+                size="full"
+            >
+                <div className="space-y-8 py-6">
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-text-muted px-2">Nom Complet</label>
+                        <input type="text" className="w-full h-14 bg-bg-tertiary rounded-2xl px-6 font-bold" placeholder="JEAN DUPONT" value={name} onChange={e => setName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-text-muted px-2">Téléphone</label>
+                        <input type="tel" className="w-full h-14 bg-bg-tertiary rounded-2xl px-6 font-bold" placeholder="+33 6..." value={phone} onChange={e => setPhone(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-text-muted px-2">Commentaires</label>
+                        <textarea className="w-full h-32 bg-bg-tertiary rounded-2xl p-6 font-bold resize-none" placeholder="Allergies, Préférences..." value={notes} onChange={e => setNotes(e.target.value)} />
+                    </div>
+                    <Button onClick={() => setShowNewCustomer(false)} className="w-full h-16 bg-success text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                        Homologuer Profil
+                    </Button>
+                </div>
+            </BottomSheet>
+
+            {!isMobile && (
+                <SecurityPinModal
+                    isOpen={showSecurityModal}
+                    onClose={() => setShowSecurityModal(false)}
+                    onSuccess={confirmDeleteCustomer}
+                />
             )}
         </div>
     );
