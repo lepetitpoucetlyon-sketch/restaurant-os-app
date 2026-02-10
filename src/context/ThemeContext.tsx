@@ -61,13 +61,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     // Persist to localStorage and apply CSS variables
     useEffect(() => {
-        localStorage.setItem('app-theme-config', JSON.stringify(state));
+        localStorage.setItem('app-theme-config', JSON.stringify({ ...state, mode: 'light' }));
 
         // Apply Mode Class
         const root = document.documentElement;
-        root.classList.remove('light', 'dark');
-
-        // FORCED LIGHT MODE
+        root.classList.remove('dark');
         root.classList.add('light');
 
         // Accent Colors Map

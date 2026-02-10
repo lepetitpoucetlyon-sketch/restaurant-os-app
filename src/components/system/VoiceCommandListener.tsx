@@ -42,7 +42,7 @@ export function VoiceCommandListener() {
     const router = useRouter();
     const pathname = usePathname();
     const { showToast } = useToast();
-    const { toggleLaunchpad, toggleTheme, theme, openDocumentation, openCommandPalette } = useUI();
+    const { toggleLaunchpad, theme, openDocumentation, openCommandPalette } = useUI();
 
     // Data Contexts for Intelligence
     const { totalRevenue, orders } = useOrders();
@@ -256,16 +256,6 @@ export function VoiceCommandListener() {
             category: 'system',
             action: (args) => {
                 const target = args.toLowerCase();
-                if (target.includes('sombre') || target.includes('nuit') || target.includes('dark')) {
-                    if (theme === 'light') toggleTheme();
-                    speak("Mode nuit activé.");
-                    return "Activation du Mode Nuit";
-                }
-                if (target.includes('clair') || target.includes('jour') || target.includes('light')) {
-                    if (theme === 'dark') toggleTheme();
-                    speak("Mode jour activé.");
-                    return "Activation du Mode Jour";
-                }
                 if (target.includes('menu') || target.includes('launchpad')) {
                     toggleLaunchpad();
                     speak("Menu principal.");
@@ -534,7 +524,7 @@ export function VoiceCommandListener() {
         // Reset processing state after delay
         setTimeout(() => setIsProcessing(false), 2000);
 
-    }, [router, showToast, toggleTheme, theme, toggleLaunchpad, openDocumentation, openCommandPalette, speak, totalRevenue, orders.length, stockItems, customers, sensors, shifts, predictiveAlerts, financialInsight, reviews, generateAIReply, runSimulation, hasAccess, recipes]);
+    }, [router, showToast, theme, toggleLaunchpad, openDocumentation, openCommandPalette, speak, totalRevenue, orders.length, stockItems, customers, sensors, shifts, predictiveAlerts, financialInsight, reviews, generateAIReply, runSimulation, hasAccess, recipes]);
 
     // --- Audio Visualization Logic ---
     const drawWaveform = useCallback(() => {
@@ -702,7 +692,7 @@ export function VoiceCommandListener() {
                                 setIsSpeaking(false);
                                 window.speechSynthesis.cancel();
                             }}
-                            className="absolute top-12 right-12 w-12 h-12 rounded-full border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all"
+                            className="absolute top-12 right-12 w-12 h-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -768,7 +758,7 @@ export function VoiceCommandListener() {
                                     { icon: Activity, label: "Revenu ?" },
                                     { icon: Zap, label: "Stock ?" },
                                 ].map((hint, i) => (
-                                    <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-dashed border-neutral-300 dark:border-white/10">
+                                    <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-dashed border-neutral-300">
                                         <hint.icon className="w-4 h-4 text-accent-gold" />
                                         <span className="text-[10px] font-bold uppercase tracking-widest">{hint.label}</span>
                                     </div>

@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Restaurant OS | Premium Intelligence",
+  title: "Candeurs OS | Premium Intelligence",
   description: "The next generation operating system for modern restaurants",
 };
 

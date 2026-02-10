@@ -23,8 +23,6 @@ import {
     Settings,
     Sparkles,
     Bell,
-    Sun,
-    Moon,
     Zap,
     Mic
 } from "lucide-react";
@@ -51,7 +49,7 @@ export function MobileNavBar() {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
     const { t } = useLanguage();
-    const { theme, toggleTheme, openCommandPalette } = useUI();
+    const { toggleTheme, openCommandPalette } = useUI();
     const { unreadCount } = useNotifications();
 
     return (
@@ -137,12 +135,6 @@ export function MobileNavBar() {
                             </div>
 
                             <div className="mt-12 pt-10 border-t border-border/50 flex justify-between">
-                                <button onClick={() => { toggleTheme(); setIsMenuOpen(false); }} className="flex-1 flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center">
-                                        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                                    </div>
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-text-muted">Thème</span>
-                                </button>
                                 <button onClick={() => { setIsNotificationsOpen(true); setIsMenuOpen(false); }} className="flex-1 flex flex-col items-center gap-2">
                                     <div className="w-12 h-12 rounded-full bg-bg-tertiary flex items-center justify-center relative">
                                         <Bell className="w-5 h-5" />

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Settings, Sparkles, Sun, Moon, MoreHorizontal, X } from "lucide-react";
+import { Bell, Settings, Sparkles, MoreHorizontal, X } from "lucide-react";
 import { useUI } from "@/context/UIContext";
 import { useNotifications } from "@/context/NotificationsContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +21,7 @@ interface LaunchpadStatusHubProps {
 }
 
 export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadStatusHubProps) {
-    const { theme, toggleTheme } = useUI();
+    const { toggleTheme } = useUI();
     const { unreadCount } = useNotifications();
     const { language, setLanguage } = useLanguage();
     const [isCommandOpen, setIsCommandOpen] = useState(false);
@@ -30,7 +30,6 @@ export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadSta
 
 
 
-    const isDark = theme === 'dark';
     const { openSettings } = useContextualSettings();
     const pathname = usePathname();
 
@@ -94,23 +93,6 @@ export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadSta
                         </AnimatePresence>
                     </div>
 
-                    {/* Theme */}
-                    <button
-                        onClick={toggleTheme}
-                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 relative overflow-hidden group border border-accent-gold hover:bg-neutral-50 dark:hover:bg-white/5 hover:scale-105"
-                    >
-                        <AnimatePresence mode="wait" initial={false}>
-                            {isDark ? (
-                                <motion.div key="sun" initial={{ rotate: -45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 45, opacity: 0 }}>
-                                    <Sun strokeWidth={1.5} className="w-6 h-6" />
-                                </motion.div>
-                            ) : (
-                                <motion.div key="moon" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -45, opacity: 0 }}>
-                                    <Moon strokeWidth={1.5} className="w-6 h-6" />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </button>
 
                     {/* Notifications */}
                     <button

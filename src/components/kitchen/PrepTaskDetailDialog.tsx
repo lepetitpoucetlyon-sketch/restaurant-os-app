@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/motion";
-import { useUI } from "@/context/UIContext";
 import type { MiseEnPlaceTask } from "@/types";
 
 interface PrepTaskDetailDialogProps {
@@ -17,8 +16,7 @@ interface PrepTaskDetailDialogProps {
 }
 
 export function PrepTaskDetailDialog({ isOpen, onClose, task, onToggleStatus }: PrepTaskDetailDialogProps) {
-    const { theme } = useUI();
-    const isDark = theme === 'dark';
+    // Forced to light mode
 
     if (!task) return null;
 
@@ -32,21 +30,15 @@ export function PrepTaskDetailDialog({ isOpen, onClose, task, onToggleStatus }: 
             showClose={false}
             noPadding
         >
-            <div className={cn("flex flex-col h-[85vh] transition-colors duration-500", isDark ? "bg-bg-secondary" : "bg-white")}>
+            <div className="flex flex-col h-[85vh] transition-colors duration-500 bg-white">
                 {/* Modal Header */}
-                <div className={cn(
-                    "relative p-10 overflow-hidden transition-colors duration-500",
-                    isDark ? "bg-gradient-to-br from-[#1A1A1A] via-[#2D2D2D] to-[#1A1A1A]" : "bg-gradient-to-br from-[#F1F0EA] via-white to-[#F1F0EA]"
-                )}>
-                    <div className={cn("absolute inset-0 opacity-10 transition-opacity", !isDark && "opacity-[0.05]")} style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/carbon-fibre.png")` }} />
+                <div className="relative p-10 overflow-hidden transition-colors duration-500 bg-gradient-to-br from-[#F1F0EA] via-white to-[#F1F0EA]">
+                    <div className="absolute inset-0 opacity-[0.05] transition-opacity" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/carbon-fibre.png")` }} />
 
                     <button
                         type="button"
                         onClick={onClose}
-                        className={cn(
-                            "absolute top-8 right-8 w-12 h-12 backdrop-blur-md rounded-2xl flex items-center justify-center transition-all duration-300 z-10 border cursor-pointer",
-                            isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/10" : "bg-black/5 hover:bg-black/10 text-black border-black/10"
-                        )}
+                        className="absolute top-8 right-8 w-12 h-12 backdrop-blur-md rounded-2xl flex items-center justify-center transition-all duration-300 z-10 border cursor-pointer bg-black/5 hover:bg-black/10 text-black border-black/10"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -70,7 +62,7 @@ export function PrepTaskDetailDialog({ isOpen, onClose, task, onToggleStatus }: 
                                     {task.isCompleted ? "Protocol Terminé" : "Opération en cours"}
                                 </span>
                             </div>
-                            <h1 className={cn("text-4xl font-serif font-black tracking-tight leading-tight transition-colors", isDark ? "text-white" : "text-black")}>{task.name}</h1>
+                            <h1 className="text-4xl font-serif font-black tracking-tight leading-tight transition-colors text-black">{task.name}</h1>
                         </div>
                     </div>
                 </div>
@@ -92,8 +84,7 @@ export function PrepTaskDetailDialog({ isOpen, onClose, task, onToggleStatus }: 
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.1 * idx }}
                                     className={cn(
-                                        "group p-6 rounded-[2rem] border shadow-sm hover:shadow-xl hover:shadow-accent/5 transition-all duration-500",
-                                        isDark ? "bg-white/5 border-white/5" : "bg-bg-primary border-black/5"
+                                        "group p-6 rounded-[2rem] border shadow-sm hover:shadow-xl hover:shadow-accent/5 transition-all duration-500 bg-bg-primary border-black/5"
                                     )}
                                 >
                                     <div className="flex items-center gap-4 mb-4">
@@ -134,10 +125,10 @@ export function PrepTaskDetailDialog({ isOpen, onClose, task, onToggleStatus }: 
                                             key={item.step}
                                             variants={staggerItem}
                                             className={cn(
-                                                "group flex items-start gap-6 p-6 rounded-[1.5rem] border-2 transition-all duration-500",
+                                                "flex items-center gap-6 p-4 rounded-[1.5rem] border transition-all duration-300",
                                                 item.done
-                                                    ? (isDark ? "bg-success/5 border-success/10" : "bg-success/5 border-success/20")
-                                                    : (isDark ? "bg-white/5 border-white/5" : "bg-white border-black/5 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5")
+                                                    ? "bg-success/5 border-success/20"
+                                                    : "bg-white border-black/5 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5"
                                             )}
                                         >
                                             <div className={cn(

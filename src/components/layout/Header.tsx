@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, Search, Wifi, Settings, HelpCircle, ChevronRight, Globe, Command, Sparkles, Menu, Sun, Moon, BookOpen } from "lucide-react";
+import { Bell, Search, Wifi, Settings, HelpCircle, ChevronRight, Globe, Command, Sparkles, Menu, BookOpen } from "lucide-react";
 import { useUI } from "@/context/UIContext";
 import { useAuth, ROLE_LABELS } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationsContext";
@@ -25,7 +25,6 @@ export function Header() {
     const { theme, toggleTheme, toggleMobileMenu, openDocumentation, isCommandOpen, openCommandPalette, closeCommandPalette, toggleLaunchpad } = useUI();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-    const isDark = theme === 'dark';
     const { openSettings, getPageSettings, canAccessSetting } = useContextualSettings();
 
     // Map pathname to PageKey for contextual settings
@@ -164,30 +163,6 @@ export function Header() {
                             <div className="absolute inset-0 rounded-full bg-neutral-100/50 dark:bg-neutral-800/50 border border-transparent group-hover:border-accent-gold/30 transition-all duration-500 group-hover:shadow-[0_0_15px_rgba(197,160,89,0.15)]" />
                             <div className="absolute inset-[3px] rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/10 shadow-sm flex items-center justify-center overflow-hidden">
                                 <span className="text-lg relative z-10 grayscale group-hover:grayscale-0 transition-all duration-300 transform scale-110">{selectedLanguage?.flag}</span>
-                            </div>
-                        </motion.button>
-
-                        {/* 3. Theme Button */}
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={toggleTheme}
-                            className="relative w-11 h-11 flex items-center justify-center group"
-                        >
-                            <div className="absolute inset-0 rounded-full bg-neutral-100/50 dark:bg-neutral-800/50 border border-transparent group-hover:border-accent-gold/30 transition-all duration-500 group-hover:shadow-[0_0_15px_rgba(197,160,89,0.15)]" />
-                            <div className="absolute inset-[3px] rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/10 shadow-sm" />
-                            <div className="relative z-10 w-5 h-5 text-neutral-500 dark:text-neutral-400 group-hover:text-accent-gold transition-colors duration-300">
-                                <AnimatePresence mode="wait" initial={false}>
-                                    {isDark ? (
-                                        <motion.div key="sun" initial={{ rotate: -45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 45, opacity: 0 }} transition={{ duration: 0.2 }}>
-                                            <Sun strokeWidth={1.5} className="w-5 h-5" />
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div key="moon" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -45, opacity: 0 }} transition={{ duration: 0.2 }}>
-                                            <Moon strokeWidth={1.5} className="w-5 h-5" />
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
                             </div>
                         </motion.button>
 

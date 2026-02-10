@@ -7,8 +7,6 @@ import {
     Palette,
     Save,
     Loader2,
-    Sun,
-    Moon,
     Monitor,
     Type,
     Circle,
@@ -232,76 +230,6 @@ export default function AppearanceSettings() {
                 </div>
             </motion.div>
 
-            {/* Luminance Modulation (Theme Mode) */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-bg-secondary border border-border rounded-[2.5rem] shadow-premium p-10"
-            >
-                <div className="flex items-center gap-4 mb-10">
-                    <div className="w-12 h-12 rounded-2xl bg-bg-tertiary flex items-center justify-center border border-border text-accent-gold">
-                        <Sun className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h3 className="text-2xl font-serif text-text-primary uppercase tracking-tight italic">
-                            État de Luminance
-                        </h3>
-                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Calibration de la Luminosité</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    {[
-                        { id: 'light', label: 'Spectre', desc: 'Photon Output Max', icon: Sun, style: 'bg-white text-neutral-900 border-neutral-100' },
-                        { id: 'dark', label: 'Obsidienne', desc: 'Émission Zéro', icon: Moon, style: 'bg-neutral-900 text-white border-neutral-800' },
-                        { id: 'auto', label: 'Dynamique', desc: 'Synchro Circadienne', icon: Monitor, style: 'bg-gradient-to-br from-white to-neutral-900 text-white/80 border-neutral-400' },
-                    ].map((mode) => {
-                        const Icon = mode.icon;
-                        const isActive = theme.mode === mode.id;
-
-                        // Override style for Silent Luxury consistnecy
-                        const activeStyle = "bg-text-primary text-bg-primary border-text-primary shadow-xl";
-                        const inactiveStyle = "bg-bg-tertiary text-text-muted border-border hover:border-accent/50 hover:text-text-primary";
-
-                        return (
-                            <motion.button
-                                key={mode.id}
-                                whileHover={{ scale: isActive ? 1 : 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => theme.setMode(mode.id as any)}
-                                className={cn(
-                                    "relative p-8 rounded-[2rem] border transition-all duration-500 flex flex-col items-center gap-4 overflow-hidden group",
-                                    isActive ? activeStyle : inactiveStyle
-                                )}
-                            >
-                                <div className={cn(
-                                    "w-16 h-16 rounded-2xl flex items-center justify-center mb-2 transition-transform duration-500 bg-bg-primary/10 border border-white/20",
-                                    isActive ? "scale-110 rotate-12" : "group-hover:scale-105"
-                                )}>
-                                    <Icon className="w-8 h-8" />
-                                </div>
-                                <div className="text-center">
-                                    <p className={cn(
-                                        "font-black text-sm uppercase tracking-tighter"
-                                    )}>
-                                        {mode.label}
-                                    </p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest mt-1 opacity-60">
-                                        {mode.desc}
-                                    </p>
-                                </div>
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="mode-active"
-                                        className="absolute inset-x-0 bottom-0 h-1 bg-accent-gold"
-                                    />
-                                )}
-                            </motion.button>
-                        );
-                    })}
-                </div>
-            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
                 {/* Neural Typography */}
@@ -442,10 +370,7 @@ export default function AppearanceSettings() {
                 </div>
 
                 <div
-                    className={cn(
-                        "p-10 rounded-[2.5rem] border transition-all duration-700 relative overflow-hidden",
-                        theme.mode === 'dark' ? "bg-black border-white/10" : "bg-white border-neutral-200"
-                    )}
+                    className="p-10 rounded-[2.5rem] border transition-all duration-700 relative overflow-hidden bg-white border-neutral-200"
                 >
                     <div className="absolute top-0 right-0 w-96 h-96 blur-[100px] opacity-20 -mr-48 -mt-48 transition-colors duration-700" style={{ backgroundColor: theme.accentColor === 'gold' ? '#C5A059' : theme.accentColor === 'emerald' ? '#10B981' : theme.accentColor === 'sapphire' ? '#3B82F6' : theme.accentColor === 'ruby' ? '#EF4444' : '#8B5CF6' }} />
                     <div className="absolute bottom-0 left-0 w-96 h-96 blur-[100px] opacity-10 -ml-48 -mb-48 transition-colors duration-700" style={{ backgroundColor: theme.accentColor === 'gold' ? '#C5A059' : theme.accentColor === 'emerald' ? '#10B981' : theme.accentColor === 'sapphire' ? '#3B82F6' : theme.accentColor === 'ruby' ? '#EF4444' : '#8B5CF6' }} />
@@ -465,7 +390,7 @@ export default function AppearanceSettings() {
                                 <h4
                                     className="text-3xl font-black uppercase tracking-tighter"
                                     style={{
-                                        color: theme.mode === 'dark' ? '#fff' : '#1a1a1a',
+                                        color: '#1a1a1a',
                                         fontFamily: theme.fontHeadings
                                     }}
                                 >
@@ -474,7 +399,7 @@ export default function AppearanceSettings() {
                                 <p
                                     className="text-xs font-black uppercase tracking-[0.3em] opacity-40"
                                     style={{
-                                        color: theme.mode === 'dark' ? '#999' : '#666',
+                                        color: '#666',
                                         fontFamily: theme.fontPrimary
                                     }}
                                 >
@@ -505,8 +430,8 @@ export default function AppearanceSettings() {
                                             theme.borderRadius === 'medium' ? 'rounded-2xl' : 'rounded-[1.5rem]'
                                 )}
                                 style={{
-                                    borderColor: theme.mode === 'dark' ? '#333' : '#eee',
-                                    color: theme.mode === 'dark' ? '#fff' : '#111'
+                                    borderColor: '#eee',
+                                    color: '#111'
                                 }}
                             >
                                 Calibration

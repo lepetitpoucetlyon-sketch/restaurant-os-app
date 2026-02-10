@@ -78,8 +78,27 @@ export default function POSPage() {
     };
 
     const handleSendToKitchen = () => {
-        if (cartItems.length === 0) return;
-        showToast(`Table ${currentTable?.number} : Commande envoyée`, "success");
+        if (cartItems.length === 0 || !currentTable) return;
+
+        // Create order in context so it appears in KDS
+        addOrder({
+            tableId: currentTable.id,
+            tableNumber: currentTable.number,
+            serverName: currentUser?.name || 'Server',
+            items: cartItems.map(item => ({
+                id: item.cartId,
+                productId: item.productId,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                status: 'pending',
+                notes: item.notes,
+                modifiers: item.modifiers
+            })),
+            status: 'new' // This will make it appear in KDS
+        });
+
+        showToast(`Table ${currentTable?.number} : Commande envoyée en cuisine`, "success");
         setCartItems([]);
         if (selectedTableId) {
             updateTable(selectedTableId, { status: 'ordered' });
@@ -168,9 +187,28 @@ export default function POSPage() {
                 </div>
             </div>
 
-            {/* Product Grid */}
-            <div className="flex-1 overflow-auto p-4 lg:p-12 elegant-scrollbar bg-bg-primary/50">
-                <ProductGrid categoryFilter={selectedCategory} onAddToCart={handleAddToCart} />
+            {/* Main Content Area - ProductGrid + Cart side by side on desktop */}
+            <div className="flex-1 flex flex-row overflow-hidden">
+                {/* Product Grid */}
+                <div className="flex-1 overflow-auto p-4 lg:p-12 elegant-scrollbar bg-bg-primary/50">
+                    <ProductGrid categoryFilter={selectedCategory} onAddToCart={handleAddToCart} />
+                </div>
+
+                {/* Cart Sheet (Mobile) / Desktop Sidebar */}
+                {!isMobile && (
+                    <div className="h-full hidden xl:block w-[400px] shrink-0 border-l border-border/30">
+                        <Cart
+                            items={cartItems}
+                            onUpdateQuantity={handleUpdateQuantity}
+                            onClearCart={handleClearCart}
+                            onCheckout={handleCheckout}
+                            onSendToKitchen={handleSendToKitchen}
+                            onSplitBill={() => setIsSplitOpen(true)}
+                            tableNumber={currentTable?.number}
+                            guestCount={currentTable?.seats}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Mobile Cart Tray (Dock UX) */}
@@ -201,22 +239,6 @@ export default function POSPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Cart Sheet (Mobile) / Desktop Sidebar */}
-            {!isMobile && (
-                <div className="h-full hidden xl:block w-[400px]">
-                    <Cart
-                        items={cartItems}
-                        onUpdateQuantity={handleUpdateQuantity}
-                        onClearCart={handleClearCart}
-                        onCheckout={handleCheckout}
-                        onSendToKitchen={handleSendToKitchen}
-                        onSplitBill={() => setIsSplitOpen(true)}
-                        tableNumber={currentTable?.number}
-                        guestCount={currentTable?.seats}
-                    />
-                </div>
-            )}
 
             <BottomSheet
                 isOpen={isMobileCartOpen}

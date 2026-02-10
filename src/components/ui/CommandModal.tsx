@@ -72,7 +72,6 @@ interface CommandModalProps {
 
 export function CommandModal({ isOpen, onClose }: CommandModalProps) {
     const { theme } = useUI();
-    const isDark = theme === 'dark';
     const router = useRouter();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -177,10 +176,7 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
                 <div className="max-h-[500px] overflow-y-auto elegant-scrollbar p-6 space-y-8 relative z-10">
                     {filteredItems.length === 0 ? (
                         <div className="py-20 text-center">
-                            <p className={cn(
-                                "font-serif italic text-2xl transition-colors",
-                                isDark ? "text-white/20" : "text-black/20"
-                            )}>Aucune action trouvée pour "{searchTerm}"</p>
+                            <p className="font-serif italic text-2xl text-black/20">Aucune action trouvée pour "{searchTerm}"</p>
                         </div>
                     ) : (
                         Object.entries(groupedItems).map(([section, items], sectionIndex) => (
@@ -210,7 +206,7 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
                                             >
                                                 <div className={cn(
                                                     "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-700",
-                                                    isActive ? "bg-white/20 text-white" : (isDark ? "bg-black/40 text-accent-gold border border-accent-gold/10" : "bg-white text-accent-gold border border-accent-gold/20 shadow-sm")
+                                                    isActive ? "bg-white/20 text-white" : "bg-white text-accent-gold border border-accent-gold/20 shadow-sm"
                                                 )}>
                                                     <Icon strokeWidth={1.5} className="w-6 h-6" />
                                                 </div>
@@ -236,39 +232,21 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
                 </div>
 
                 {/* Footer Center - Operational Protocol */}
-                <div className={cn(
-                    "p-8 border-t flex items-center justify-between relative z-10 shrink-0 transition-colors",
-                    isDark ? "border-white/5 bg-white/[0.02]" : "border-black/5 bg-black/[0.02]"
-                )}>
+                <div className="p-8 border-t flex items-center justify-between relative z-10 shrink-0 border-black/5 bg-black/[0.02]">
                     <div className="flex items-center gap-8">
                         <div className="flex items-center gap-3">
-                            <div className={cn(
-                                "px-2 py-1 border rounded-lg text-[9px] font-black transition-colors",
-                                isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-black/40"
-                            )}>↑↓</div>
-                            <span className={cn(
-                                "text-[10px] font-black uppercase tracking-widest transition-colors",
-                                isDark ? "text-white/20" : "text-black/20"
-                            )}>Parcourir</span>
+                            <div className="bg-black/5 border-black/10 text-black/40 px-2 py-1 border rounded-lg text-[9px] font-black">↑↓</div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-black/20">Parcourir</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className={cn(
-                                "px-2 py-1 border rounded-lg text-[9px] font-black transition-colors",
-                                isDark ? "bg-white/5 border-white/10 text-white/40" : "bg-black/5 border-black/10 text-black/40"
-                            )}>↵</div>
-                            <span className={cn(
-                                "text-[10px] font-black uppercase tracking-widest transition-colors",
-                                isDark ? "text-white/20" : "text-black/20"
-                            )}>Activer</span>
+                            <div className="bg-black/5 border-black/10 text-black/40 px-2 py-1 border rounded-lg text-[9px] font-black">↵</div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-black/20">Activer</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col text-right">
                             <span className="text-[9px] font-black text-accent-gold uppercase tracking-[0.3em]">IA Maître</span>
-                            <span className={cn(
-                                "text-[7px] font-black uppercase tracking-[0.5em] mt-1 transition-colors",
-                                isDark ? "text-white/20" : "text-black/20"
-                            )}>Version 2.5 Alpha</span>
+                            <span className="text-[7px] font-black uppercase tracking-[0.5em] mt-1 text-black/20 transition-colors">Version 2.5 Alpha</span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center">
                             <Sparkles className="w-4 h-4 text-accent-gold" />
@@ -276,6 +254,6 @@ export function CommandModal({ isOpen, onClose }: CommandModalProps) {
                     </div>
                 </div>
             </div>
-        </Modal>
+        </Modal >
     );
 }

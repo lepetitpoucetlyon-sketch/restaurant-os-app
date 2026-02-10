@@ -597,6 +597,449 @@
             white-space: pre-wrap;
         }
 
+        /* PERSONAS */
+        .personas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .persona-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .persona-card:hover {
+            border-color: var(--accent-green);
+            transform: translateY(-4px);
+        }
+
+        .persona-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .persona-card:hover::before {
+            opacity: 1;
+        }
+
+        .persona-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .persona-role {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .persona-title {
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+        }
+
+        .persona-modules {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .persona-module {
+            background: var(--bg-tertiary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .persona-pain {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* VALUE PROPS */
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .value-card {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .value-metric {
+            font-size: 4rem;
+            font-weight: 900;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .value-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* INTEGRATIONS */
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .integration-cat {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .integration-cat-name {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-purple);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .integration-logos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .integration-logo {
+            background: var(--bg-tertiary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* SECURITY */
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .security-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 215, 100, 0.1);
+            color: var(--accent-green);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .security-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .security-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* PRICING */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent-green);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: 'Populaire';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-green);
+            color: #000;
+            padding: 0.25rem 1rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .pricing-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .pricing-target {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pricing-features li i {
+            color: var(--accent-green);
+            width: 16px;
+        }
+
+        .pricing-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pricing-btn.primary {
+            background: var(--accent-green);
+            color: #000;
+        }
+
+        .pricing-btn.secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* KPIs */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .kpi-icon {
+            color: var(--accent-blue);
+            margin-bottom: 0.75rem;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* FAQ */
+        .faq-list {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 1.5rem 2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .faq-question:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+            color: var(--text-muted);
+        }
+
+        .faq-item.open .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .faq-item.open .faq-answer {
+            max-height: 300px;
+        }
+
+        .faq-answer-content {
+            padding: 0 2rem 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* CTA */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(0, 215, 100, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 4rem;
+            text-align: center;
+            margin: 4rem 0;
+        }
+
+        .cta-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-desc {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn {
+            padding: 1rem 2.5rem;
+            border-radius: 100px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .cta-btn.primary {
+            background: var(--accent-green);
+            color: #000;
+        }
+
+        .cta-btn.primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 215, 100, 0.3);
+        }
+
+        .cta-btn.secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* ANIMATIONS */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* RESPONSIVE */
         @media (max-width: 1024px) {
             .roadmap {
@@ -619,6 +1062,22 @@
 
             .section {
                 padding: 4rem 1.5rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .value-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -811,6 +1270,362 @@
         </div>
     </section>
 
+    <!-- PERSONAS -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">05</div>
+            <div>
+                <span class="section-subtitle">Utilisateurs</span>
+                <h2 class="section-title">8 Personas Clés</h2>
+            </div>
+        </div>
+        <div class="personas-grid">
+            <div class="persona-card">
+                <div class="persona-emoji">👨‍🍳</div>
+                <div class="persona-role">Chef Exécutif</div>
+                <div class="persona-title">Direction Culinaire</div>
+                <div class="persona-modules"><span class="persona-module">Kitchen Mgmt</span><span
+                        class="persona-module">R&D Lab</span><span class="persona-module">Inventory</span></div>
+                <div class="persona-pain">« Standardiser les recettes et maîtriser le food cost »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">👔</div>
+                <div class="persona-role">Directeur Général</div>
+                <div class="persona-title">Pilotage Global</div>
+                <div class="persona-modules"><span class="persona-module">Dashboard</span><span
+                        class="persona-module">Analytics</span><span class="persona-module">Finance</span></div>
+                <div class="persona-pain">« Avoir une vision 360° en temps réel »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">💰</div>
+                <div class="persona-role">DAF / Comptable</div>
+                <div class="persona-title">Finance & Trésorerie</div>
+                <div class="persona-modules"><span class="persona-module">Finance</span><span
+                        class="persona-module">Comptabilité</span><span class="persona-module">Invoicing</span></div>
+                <div class="persona-pain">« Automatiser TVA et réconciliation bancaire »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">👥</div>
+                <div class="persona-role">Responsable RH</div>
+                <div class="persona-title">Gestion des Équipes</div>
+                <div class="persona-modules"><span class="persona-module">Staff</span><span
+                        class="persona-module">Planning</span><span class="persona-module">HACCP</span></div>
+                <div class="persona-pain">« Optimiser le planning et réduire les coûts main-d'œuvre »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">🛒</div>
+                <div class="persona-role">Responsable Achats</div>
+                <div class="persona-title">Supply Chain</div>
+                <div class="persona-modules"><span class="persona-module">Inventory</span><span
+                        class="persona-module">Fournisseurs</span><span class="persona-module">Waste</span></div>
+                <div class="persona-pain">« Négocier mieux et éviter les ruptures »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">📱</div>
+                <div class="persona-role">Community Manager</div>
+                <div class="persona-title">Marketing Digital</div>
+                <div class="persona-modules"><span class="persona-module">Social</span><span
+                        class="persona-module">CRM</span><span class="persona-module">Avis</span></div>
+                <div class="persona-pain">« Booster l'engagement et gérer la réputation »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">🍽️</div>
+                <div class="persona-role">Responsable Salle</div>
+                <div class="persona-title">Service Client</div>
+                <div class="persona-modules"><span class="persona-module">Plan de Salle</span><span
+                        class="persona-module">Réservations</span><span class="persona-module">POS</span></div>
+                <div class="persona-pain">« Fluidifier le service et réduire les no-shows »</div>
+            </div>
+            <div class="persona-card">
+                <div class="persona-emoji">🏢</div>
+                <div class="persona-role">Franchiseur</div>
+                <div class="persona-title">Multi-Sites</div>
+                <div class="persona-modules"><span class="persona-module">Franchise HQ</span><span
+                        class="persona-module">Analytics</span><span class="persona-module">GED</span></div>
+                <div class="persona-pain">« Standardiser et benchmarker tous les sites »</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VALUE PROPOSITIONS -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">06</div>
+            <div>
+                <span class="section-subtitle">ROI</span>
+                <h2 class="section-title">Valeur Ajoutée Mesurable</h2>
+            </div>
+        </div>
+        <div class="value-grid">
+            <div class="value-card">
+                <div class="value-metric">-40%</div>
+                <div class="value-label">Temps administratif par jour</div>
+            </div>
+            <div class="value-card">
+                <div class="value-metric">-15%</div>
+                <div class="value-label">Coût matière (waste tracking)</div>
+            </div>
+            <div class="value-card">
+                <div class="value-metric">+25%</div>
+                <div class="value-label">Table turnover optimisé</div>
+            </div>
+            <div class="value-card">
+                <div class="value-metric">+30%</div>
+                <div class="value-label">Conversion fidélité</div>
+            </div>
+            <div class="value-card">
+                <div class="value-metric">99.9%</div>
+                <div class="value-label">Uptime garanti SLA</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTEGRATIONS -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">07</div>
+            <div>
+                <span class="section-subtitle">Connectivité</span>
+                <h2 class="section-title">Écosystème d'Intégrations</h2>
+            </div>
+        </div>
+        <div class="integrations-grid">
+            <div class="integration-cat">
+                <div class="integration-cat-name"><i data-lucide="credit-card"></i> Paiement</div>
+                <div class="integration-logos"><span class="integration-logo">Stripe</span><span
+                        class="integration-logo">SumUp</span><span class="integration-logo">Adyen</span><span
+                        class="integration-logo">Zettle</span></div>
+            </div>
+            <div class="integration-cat">
+                <div class="integration-cat-name"><i data-lucide="bike"></i> Livraison</div>
+                <div class="integration-logos"><span class="integration-logo">Uber Eats</span><span
+                        class="integration-logo">Deliveroo</span><span class="integration-logo">Just Eat</span><span
+                        class="integration-logo">Stuart</span></div>
+            </div>
+            <div class="integration-cat">
+                <div class="integration-cat-name"><i data-lucide="calculator"></i> Comptabilité</div>
+                <div class="integration-logos"><span class="integration-logo">Pennylane</span><span
+                        class="integration-logo">Sage</span><span class="integration-logo">QuickBooks</span><span
+                        class="integration-logo">Cegid</span></div>
+            </div>
+            <div class="integration-cat">
+                <div class="integration-cat-name"><i data-lucide="message-circle"></i> Communication</div>
+                <div class="integration-logos"><span class="integration-logo">Twilio</span><span
+                        class="integration-logo">SendGrid</span><span class="integration-logo">WhatsApp</span><span
+                        class="integration-logo">Mailchimp</span></div>
+            </div>
+            <div class="integration-cat">
+                <div class="integration-cat-name"><i data-lucide="cpu"></i> IoT & Hardware</div>
+                <div class="integration-logos"><span class="integration-logo">Thermomètres</span><span
+                        class="integration-logo">Balances</span><span class="integration-logo">ZPL Printers</span><span
+                        class="integration-logo">Kiosks</span></div>
+            </div>
+            <div class="integration-cat">
+                <div class="integration-cat-name"><i data-lucide="bar-chart-3"></i> BI & Analytics</div>
+                <div class="integration-logos"><span class="integration-logo">Metabase</span><span
+                        class="integration-logo">Looker</span><span class="integration-logo">Google
+                        Analytics</span><span class="integration-logo">Mixpanel</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">08</div>
+            <div>
+                <span class="section-subtitle">Compliance</span>
+                <h2 class="section-title">Sécurité & Conformité</h2>
+            </div>
+        </div>
+        <div class="security-grid">
+            <div class="security-card">
+                <div class="security-badge"><i data-lucide="shield"></i> RGPD</div>
+                <div class="security-title">Protection des Données</div>
+                <div class="security-desc">Chiffrement AES-256, droit à l'oubli automatisé, export GDPR, consentement
+                    explicite, DPO dédié.</div>
+            </div>
+            <div class="security-card">
+                <div class="security-badge"><i data-lucide="credit-card"></i> PCI-DSS</div>
+                <div class="security-title">Sécurité Paiements</div>
+                <div class="security-desc">Tokenisation des cartes, zéro stockage de données sensibles, audit annuel
+                    Level 1.</div>
+            </div>
+            <div class="security-card">
+                <div class="security-badge"><i data-lucide="thermometer"></i> HACCP</div>
+                <div class="security-title">Traçabilité Alimentaire</div>
+                <div class="security-desc">Logs immuables horodatés, alertes températures IoT, chaîne du froid
+                    documentée.</div>
+            </div>
+            <div class="security-card">
+                <div class="security-badge"><i data-lucide="landmark"></i> NF525</div>
+                <div class="security-title">Caisse Certifiée</div>
+                <div class="security-desc">Conformité anti-fraude fiscale, archivage JET, export FEC, attestation
+                    Infocert.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">09</div>
+            <div>
+                <span class="section-subtitle">Tarification</span>
+                <h2 class="section-title">Modèle Économique</h2>
+            </div>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="pricing-name">Starter</div>
+                <div class="pricing-price">99€<span>/mois</span></div>
+                <div class="pricing-target">Bistrot, Coffee Shop</div>
+                <ul class="pricing-features">
+                    <li><i data-lucide="check"></i> 10 modules essentiels</li>
+                    <li><i data-lucide="check"></i> 1 point de vente</li>
+                    <li><i data-lucide="check"></i> Support email</li>
+                    <li><i data-lucide="check"></i> 5 utilisateurs</li>
+                </ul>
+                <button class="pricing-btn secondary">Essai Gratuit</button>
+            </div>
+            <div class="pricing-card featured">
+                <div class="pricing-name">Business</div>
+                <div class="pricing-price">249€<span>/mois</span></div>
+                <div class="pricing-target">Restaurant Gastronomique</div>
+                <ul class="pricing-features">
+                    <li><i data-lucide="check"></i> 28 modules complets</li>
+                    <li><i data-lucide="check"></i> 3 points de vente</li>
+                    <li><i data-lucide="check"></i> Support prioritaire 24/7</li>
+                    <li><i data-lucide="check"></i> Utilisateurs illimités</li>
+                    <li><i data-lucide="check"></i> API access</li>
+                </ul>
+                <button class="pricing-btn primary">Démarrer</button>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-name">Enterprise</div>
+                <div class="pricing-price">Sur Devis</div>
+                <div class="pricing-target">Groupes, Franchises</div>
+                <ul class="pricing-features">
+                    <li><i data-lucide="check"></i> Multi-sites illimités</li>
+                    <li><i data-lucide="check"></i> SSO & SAML</li>
+                    <li><i data-lucide="check"></i> SLA 99.99%</li>
+                    <li><i data-lucide="check"></i> Dedicated CSM</li>
+                    <li><i data-lucide="check"></i> Custom integrations</li>
+                </ul>
+                <button class="pricing-btn secondary">Nous Contacter</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- KPIs -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">10</div>
+            <div>
+                <span class="section-subtitle">Métriques</span>
+                <h2 class="section-title">Success Metrics</h2>
+            </div>
+        </div>
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i data-lucide="users"></i></div>
+                <div class="kpi-value">95%</div>
+                <div class="kpi-label">Adoption</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i data-lucide="zap"></i></div>
+                <div class="kpi-value">&lt;200ms</div>
+                <div class="kpi-label">Response Time</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i data-lucide="shield-check"></i></div>
+                <div class="kpi-value">99.9%</div>
+                <div class="kpi-label">Uptime SLA</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i data-lucide="heart"></i></div>
+                <div class="kpi-value">&gt;60</div>
+                <div class="kpi-label">NPS Score</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i data-lucide="smartphone"></i></div>
+                <div class="kpi-value">45%</div>
+                <div class="kpi-label">Mobile Usage</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section fade-in">
+        <div class="section-header">
+            <div class="section-number">11</div>
+            <div>
+                <span class="section-subtitle">Questions</span>
+                <h2 class="section-title">FAQ</h2>
+            </div>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">Combien de temps pour déployer Restaurant OS ?<i
+                        data-lucide="chevron-down"></i></div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">Le déploiement initial prend entre 2 et 5 jours selon la complexité
+                        de votre établissement. Notre équipe d'onboarding vous accompagne à chaque étape : import des
+                        données, formation des équipes, et configuration personnalisée.</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">Fonctionne-t-il hors ligne ?<i
+                        data-lucide="chevron-down"></i></div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">Oui ! Grâce à notre architecture offline-first avec Dexie.js, le POS
+                        et les modules critiques continuent de fonctionner sans connexion. Les données se synchronisent
+                        automatiquement dès le retour en ligne.</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">Puis-je importer mes données existantes ?<i
+                        data-lucide="chevron-down"></i></div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">Absolument. Nous proposons des imports depuis les principaux
+                        systèmes du marché (Lightspeed, Toast, Square) ainsi que des imports CSV/Excel pour vos
+                        produits, recettes, clients et fournisseurs.</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">Quelles formations sont incluses ?<i
+                        data-lucide="chevron-down"></i></div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">Tous les plans incluent une formation initiale en visio. Le plan
+                        Business ajoute des sessions illimitées et une académie en ligne. Enterprise bénéficie de
+                        formations sur site personnalisées.</div>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">Comment fonctionne le support ?<i
+                        data-lucide="chevron-down"></i></div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">Support email pour Starter (réponse sous 24h), chat et téléphone
+                        24/7 pour Business, et CSM dédié avec hotline prioritaire pour Enterprise. Notre temps de
+                        résolution moyen est de 4 heures.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+        <div class="cta-section">
+            <h2 class="cta-title">Prêt à Transformer Votre Restaurant ?</h2>
+            <p class="cta-desc">Rejoignez les 500+ établissements qui ont déjà choisi Restaurant OS pour digitaliser
+                leurs opérations.</p>
+            <div class="cta-buttons">
+                <button class="cta-btn primary"><i data-lucide="calendar"></i> Demander une Démo</button>
+                <button class="cta-btn secondary"><i data-lucide="file-text"></i> Télécharger la Brochure</button>
+            </div>
+        </div>
+    </section>
+
     <footer
         style="text-align:center; padding: 4rem; border-top: 1px solid var(--border); margin-top: 4rem; color: var(--text-muted);">
         <p style="font-family: 'Playfair Display'; font-size:1.5rem; margin-bottom:1rem; color:var(--text-primary);">
@@ -942,6 +1757,21 @@
 
         function openModal() { document.getElementById('promptModal').classList.add('active'); }
         function closeModal() { document.getElementById('promptModal').classList.remove('active'); }
+
+        function toggleFaq(el) {
+            el.parentElement.classList.toggle('open');
+        }
+
+        // Scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
     </script>
 </body>
 

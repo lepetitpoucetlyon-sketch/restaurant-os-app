@@ -71,7 +71,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     const toggleSidebar = useCallback(() => setIsSidebarCollapsed(prev => !prev), []);
     const toggleMobileMenu = useCallback(() => setIsMobileMenuOpen(prev => !prev), []);
     const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
-    const toggleTheme = useCallback(() => setTheme(prev => prev === 'light' ? 'dark' : 'light'), []);
+    // Forced Light Mode toggle (disabled)
+    const toggleTheme = useCallback(() => setTheme('light'), []);
     const toggleLaunchpad = useCallback(() => setIsLaunchpadOpen(prev => !prev), []);
     const openCommandPalette = useCallback(() => setIsCommandOpen(true), []);
     const closeCommandPalette = useCallback(() => setIsCommandOpen(false), []);
@@ -87,8 +88,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const saveSettings = useCallback((newSettings: RestaurantSettings) => {
-        setSettings(newSettings);
-        localStorage.setItem('restaurant-os-ui-prefs', JSON.stringify(newSettings));
+        setSettings({ ...newSettings, theme: 'light' });
+        localStorage.setItem('restaurant-os-ui-prefs', JSON.stringify({ ...newSettings, theme: 'light' }));
     }, []);
 
     useEffect(() => {
@@ -96,7 +97,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
         if (savedSettings) {
             try {
                 const parsed = JSON.parse(savedSettings);
-                setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+                setSettings({ ...DEFAULT_SETTINGS, ...parsed, theme: 'light' });
                 // FORCED LIGHT MODE: Ignore stored theme
                 setTheme('light');
             } catch (e) {
@@ -109,9 +110,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove('light', 'dark');
-        root.classList.add(theme);
-    }, [theme]);
+        root.classList.remove('dark');
+        root.classList.add('light');
+    }, []);
 
     // Memoize context value
     const contextValue = useMemo(() => ({
