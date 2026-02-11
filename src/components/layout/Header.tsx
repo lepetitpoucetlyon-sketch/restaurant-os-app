@@ -72,7 +72,7 @@ export function Header() {
 
     const pathSegments = pathname.split("/").filter(Boolean);
     const title = pathSegments.length > 0
-        ? pathSegments[0].charAt(0).toUpperCase() + pathSegments[0].slice(1).replace("-", " ")
+        ? (pathSegments[0] || '').charAt(0).toUpperCase() + pathSegments[0].slice(1).replace("-", " ")
         : "Tableau de Bord";
 
     // Global keyboard shortcut for Cmd+K

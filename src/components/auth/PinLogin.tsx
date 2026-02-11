@@ -132,7 +132,7 @@ export function PinLogin() {
                                             )}
                                         >
                                             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black bg-bg-primary text-text-primary group-hover:text-accent group-hover:bg-bg-primary transition-colors shadow-inner border border-border">
-                                                {user.name.charAt(0)}
+                                                {(user.name || '').charAt(0)}
                                             </div>
                                             <span className="text-[10px] font-black uppercase tracking-wider text-center leading-tight text-text-muted group-hover:text-text-primary transition-colors">
                                                 {user.name.split(' ')[0]}
@@ -161,7 +161,7 @@ export function PinLogin() {
                                 </button>
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-primary font-bold border border-border">
-                                        {selectedUser?.name.charAt(0)}
+                                        {(selectedUser?.name || '').charAt(0)}
                                     </div>
                                     <div className="text-left">
                                         <p className="text-text-primary font-bold text-sm leading-none">{selectedUser?.name}</p>

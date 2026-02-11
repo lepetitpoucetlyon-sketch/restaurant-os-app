@@ -408,7 +408,7 @@ export function Sidebar() {
                                 {currentUser?.avatar ? (
                                     <img src={currentUser.avatar} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                 ) : (
-                                    <span className="relative z-10 font-serif italic text-lg">{currentUser?.name.charAt(0)}</span>
+                                    <span className="relative z-10 font-serif italic text-lg">{(currentUser?.name || '').charAt(0)}</span>
                                 )}
                                 <div className="absolute inset-0 rounded-2xl bg-accent-gold/5 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                             </motion.div>

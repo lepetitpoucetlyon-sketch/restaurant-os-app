@@ -157,7 +157,7 @@ export default function ProfileSettings() {
                                                 <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <span className="text-xl font-serif font-bold text-text-muted">{user.name.charAt(0)}</span>
+                                                    <span className="text-xl font-serif font-bold text-text-muted">{(user.name || '').charAt(0)}</span>
                                                 </div>
                                             )}
                                         </div>

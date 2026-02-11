@@ -72,7 +72,7 @@ const StaffCard = ({ user, onClick }: { user: User; onClick?: () => void }) => (
                         <div className="w-20 h-20 rounded-[2rem] bg-bg-tertiary border border-border flex items-center justify-center font-serif text-3xl text-text-primary shadow-inner group-hover:scale-105 transition-all duration-500 overflow-hidden">
                             {user.avatar ? (
                                 <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                            ) : user.name.charAt(0)}
+                            ) : (user.name || '').charAt(0)}
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-success border-4 border-white shadow-sm" />
                     </div>
@@ -273,7 +273,7 @@ export default function StaffPage() {
                                                 <td className="px-8 py-5">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-9 h-9 rounded-lg bg-bg-tertiary border border-border flex items-center justify-center text-xs font-serif font-bold text-text-primary group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all">
-                                                            {user.name.charAt(0)}
+                                                            {(user.name || '').charAt(0)}
                                                         </div>
                                                         <span className="font-serif font-semibold text-text-primary text-[15px] group-hover:text-accent transition-colors">{user.name}</span>
                                                     </div>
@@ -384,7 +384,7 @@ export default function StaffPage() {
                                 <div key={user.id} className="bg-bg-tertiary/20 border border-border/50 rounded-2xl p-8 hover:bg-white hover:shadow-2xl hover:border-accent/20 transition-all duration-500 group">
                                     <div className="flex items-center gap-4 mb-8">
                                         <div className="w-12 h-12 rounded-xl bg-white dark:bg-bg-tertiary border border-border flex items-center justify-center font-serif text-lg font-bold text-text-primary dark:text-text-primary group-hover:bg-accent group-hover:text-white transition-all">
-                                            {user.name.charAt(0)}
+                                            {(user.name || '').charAt(0)}
                                         </div>
                                         <div>
                                             <h4 className="font-serif font-semibold text-text-primary text-[15px]">{user.name}</h4>
