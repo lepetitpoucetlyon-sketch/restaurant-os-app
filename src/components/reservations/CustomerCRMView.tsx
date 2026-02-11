@@ -81,8 +81,8 @@ export function CustomerCRMView({ customers, onCustomerClick }: CustomerCRMViewP
                                     whileHover={{ rotate: 5, scale: 1.1 }}
                                     className="w-20 h-20 rounded-[2rem] bg-accent flex items-center justify-center text-3xl font-serif font-light text-bg-primary italic group-hover:bg-white transition-all duration-500 shadow-xl shadow-amber-500/10"
                                 >
-                                    {customer.firstName.charAt(0)}
-                                    {customer.lastName.charAt(0)}
+                                    {(customer.firstName || '').charAt(0)}
+                                    {(customer.lastName || '').charAt(0)}
                                 </motion.div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className="text-3xl font-serif font-light text-text-primary tracking-tight italic group-hover:text-accent transition-colors truncate leading-tight">

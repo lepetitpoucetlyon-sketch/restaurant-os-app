@@ -191,7 +191,7 @@ export function NewReservationDialog({ isOpen, onClose, onSave, customers }: New
                                                                 "w-14 h-14 rounded-2xl flex items-center justify-center font-serif text-xl italic shadow-sm transition-colors",
                                                                 selectedCustomer?.id === customer.id ? "bg-white/10 text-bg-primary" : "bg-white/5 text-white"
                                                             )}>
-                                                                {customer.firstName.charAt(0)}{customer.lastName.charAt(0)}
+                                                                {(customer.firstName || '').charAt(0)}{(customer.lastName || '').charAt(0)}
                                                             </div>
                                                             <div className="text-left">
                                                                 <p className={cn("text-xl font-serif italic", selectedCustomer?.id === customer.id ? "text-bg-primary" : "text-white")}>
