@@ -26,6 +26,13 @@ const cinematicItem: Variants = {
     },
 };
 
+// Safe accessors for customer data that may come in different formats
+const getFirstName = (c: any): string => c?.firstName || (c?.name ? c.name.split(' ')[0] : '') || '';
+const getLastName = (c: any): string => c?.lastName || (c?.name ? c.name.split(' ').slice(1).join(' ') : '') || '';
+const getInitial = (s: string): string => (s && s.length > 0 ? s.charAt(0) : '?');
+const getVisitCount = (c: any): number => c?.visitCount ?? c?.totalVisits ?? 0;
+const getTotalSpent = (c: any): number => c?.totalSpent ?? 0;
+
 interface CustomerCRMViewProps {
     customers: Customer[];
     onCustomerClick: (customer: Customer) => void;
@@ -74,22 +81,22 @@ export function CustomerCRMView({ customers, onCustomerClick }: CustomerCRMViewP
                             variants={cinematicItem}
                             onClick={() => onCustomerClick(customer)}
                             whileHover={{ y: -10, transition: { duration: 0.4 } }}
-                            className="bg-bg-secondary rounded-[3.5rem] p-12 group relative overflow-hidden transition-all duration-700 border border-border shadow-2xl hover:border-accent/40 hover:shadow-accent/5 cursor-pointer"
+                            className="bg-white/40 dark:bg-white/5 backdrop-blur-2xl rounded-[3.5rem] p-12 group relative overflow-hidden transition-all duration-700 border border-white/20 dark:border-white/5 shadow-2xl hover:border-accent/40 hover:shadow-accent/5 cursor-pointer"
                         >
                             <div className="flex items-start gap-10 relative z-10">
                                 <motion.div
                                     whileHover={{ rotate: 5, scale: 1.1 }}
                                     className="w-20 h-20 rounded-[2rem] bg-accent flex items-center justify-center text-3xl font-serif font-light text-bg-primary italic group-hover:bg-white transition-all duration-500 shadow-xl shadow-amber-500/10"
                                 >
-                                    {(customer.firstName || '').charAt(0)}
-                                    {(customer.lastName || '').charAt(0)}
+                                    {getInitial(getFirstName(customer))}
+                                    {getInitial(getLastName(customer))}
                                 </motion.div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className="text-3xl font-serif font-light text-text-primary tracking-tight italic group-hover:text-accent transition-colors truncate leading-tight">
-                                        {customer.firstName} {customer.lastName}
+                                        {getFirstName(customer)} {getLastName(customer)}
                                     </h3>
                                     <p className="text-[12px] font-mono font-bold text-text-muted/50 mt-3 tracking-tighter">
-                                        {customer.phone}
+                                        {customer.phone || ''}
                                     </p>
                                 </div>
                             </div>
@@ -101,7 +108,7 @@ export function CustomerCRMView({ customers, onCustomerClick }: CustomerCRMViewP
                                     </div>
                                     <div>
                                         <p className="text-[12px] font-mono font-bold text-text-primary leading-none">
-                                            {customer.visitCount}
+                                            {getVisitCount(customer)}
                                         </p>
                                         <p className="text-[8px] font-black uppercase tracking-[0.3em] text-text-muted/50 mt-1 italic">
                                             Services
@@ -110,7 +117,7 @@ export function CustomerCRMView({ customers, onCustomerClick }: CustomerCRMViewP
                                 </div>
                                 <div className="text-right">
                                     <p className="text-2xl font-mono font-light text-accent italic tracking-tighter">
-                                        {customer.totalSpent.toFixed(0)}€
+                                        {getTotalSpent(customer).toFixed(0)}€
                                     </p>
                                     <p className="text-[8px] font-black uppercase tracking-[0.3em] text-text-muted/50 mt-1 italic">
                                         Valeur Totale

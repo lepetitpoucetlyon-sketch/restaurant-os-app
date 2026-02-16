@@ -144,7 +144,7 @@ export default function QualityControlPage() {
                                                         "w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm font-serif font-black",
                                                         selectedDelivery === del.id ? "bg-white/20 text-white" : "bg-bg-tertiary text-text-primary"
                                                     )}>
-                                                        {del.supplier.charAt(0)}
+                                                        {(del.supplier || '').charAt(0)}
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold text-sm tracking-tight">{del.supplier}</h4>

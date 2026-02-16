@@ -133,7 +133,7 @@ export default function AccountSettingsPage() {
                                         "w-12 h-12 rounded-2xl flex items-center justify-center text-white dark:text-bg-primary font-black text-lg",
                                         isAdmin ? "bg-gradient-to-br from-amber-500 to-orange-600" : "bg-text-primary"
                                     )}>
-                                        {ROLE_LABELS[role].charAt(0)}
+                                        {(ROLE_LABELS[role] || '').charAt(0)}
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-lg text-text-primary">{ROLE_LABELS[role]}</h3>
@@ -180,7 +180,7 @@ export default function AccountSettingsPage() {
                                                             className="flex items-center gap-2 bg-neutral-50 dark:bg-bg-tertiary px-3 py-2 rounded-xl"
                                                         >
                                                             <div className="w-6 h-6 rounded-full bg-text-primary dark:bg-accent text-white dark:text-bg-primary text-[10px] font-bold flex items-center justify-center">
-                                                                {user.name.charAt(0)}
+                                                                {(user.name || '').charAt(0)}
                                                             </div>
                                                             <span className="text-sm font-medium text-text-muted">{user.name}</span>
                                                         </div>

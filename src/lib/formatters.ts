@@ -129,7 +129,7 @@ export function truncate(text: string, maxLength: number, suffix: string = "..."
  */
 export function capitalize(text: string): string {
     if (!text) return "";
-    return (text || '').charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    return (text || '').charAt(0).toUpperCase() + (text || '').slice(1).toLowerCase();
 }
 
 /**
@@ -139,6 +139,7 @@ export function capitalize(text: string): string {
  * getInitials("Jean Dupont") // "JD"
  */
 export function getInitials(name: string, maxLength: number = 2): string {
+    if (!name) return "";
     return name
         .split(" ")
         .map((word) => (word || '').charAt(0).toUpperCase())

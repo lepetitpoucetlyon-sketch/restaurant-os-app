@@ -70,7 +70,7 @@ export function LeaveRequestCard({
                         {isManager && (
                             <div className="flex items-center gap-2 mb-1">
                                 <div className="w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold">
-                                    {request.employeeName.charAt(0)}
+                                    {(request.employeeName || '').charAt(0)}
                                 </div>
                                 <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
                                     {request.employeeName}

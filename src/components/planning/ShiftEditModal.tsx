@@ -114,7 +114,7 @@ export function ShiftEditModal({
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center font-serif text-3xl italic text-white/50">
-                                        {user.name.charAt(0)}
+                                        {(user.name || '').charAt(0)}
                                     </div>
                                 )}
                             </div>

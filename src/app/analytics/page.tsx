@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
                                     <div key={staff.userId} className="flex items-center justify-between group">
                                         <div className="flex items-center gap-5">
                                             <div className="w-14 h-14 rounded-xl bg-bg-tertiary border border-border flex items-center justify-center font-serif text-lg font-semibold text-text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                                                {staff.userName.charAt(0)}
+                                                {(staff.userName || '').charAt(0)}
                                             </div>
                                             <div>
                                                 <p className="font-serif font-semibold text-text-primary text-base group-hover:text-accent transition-colors">{staff.userName}</p>

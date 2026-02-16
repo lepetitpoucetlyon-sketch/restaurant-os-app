@@ -57,14 +57,14 @@ export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadSta
                 transition={{ duration: 0 }}
                 className="flex flex-col items-center justify-end relative z-50 my-8 md:my-16 origin-top"
             >
-                <div className="bg-white/95 dark:bg-black/95 backdrop-blur-xl rounded-full border border-black/5 dark:border-white/10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] p-2 md:p-3 flex items-center gap-3 md:gap-6 scale-90 md:scale-100 origin-center">
+                <div className="bg-white/40 dark:bg-white/5 backdrop-blur-[40px] rounded-full border border-white/20 dark:border-white/5 shadow-2xl p-2 md:p-3 flex items-center gap-3 md:gap-6 scale-90 md:scale-100 origin-center ring-1 ring-black/5 dark:ring-white/5">
                     {/* Language */}
                     <div className="relative">
                         <button
                             onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                            className="w-12 h-12 flex items-center justify-center text-xl rounded-full transition-all duration-300 group border border-accent-gold hover:bg-neutral-50 dark:hover:bg-white/5 hover:scale-105"
+                            className="w-12 h-12 flex items-center justify-center text-xl rounded-full transition-all duration-300 group border border-accent-gold/30 hover:bg-white/5 hover:scale-105 overflow-hidden"
                         >
-                            <span className="scale-110">{LANGUAGES.find(l => l.code === language)?.flag || '🇫🇷'}</span>
+                            <span className="scale-110 grayscale group-hover:grayscale-0 transition-all duration-300">{LANGUAGES.find(l => l.code === language)?.flag || '🇫🇷'}</span>
                         </button>
 
                         <AnimatePresence>
@@ -100,7 +100,7 @@ export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadSta
                             onClose?.();
                             setTimeout(() => setIsNotificationsOpen(true), 100);
                         }}
-                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 relative group border border-accent-gold hover:bg-neutral-50 dark:hover:bg-white/5 hover:scale-105"
+                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 relative group border border-accent-gold/30 hover:bg-white/5 hover:scale-105"
                     >
                         <Bell strokeWidth={1.5} className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                         {unreadCount > 0 && (
@@ -116,7 +116,7 @@ export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadSta
                             onClose?.();
                             setTimeout(() => setIsCommandOpen(true), 100);
                         }}
-                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 group border border-accent-gold hover:bg-neutral-50 dark:hover:bg-white/5 hover:scale-105"
+                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 group border border-accent-gold/30 hover:bg-white/5 hover:scale-105"
                     >
                         <Sparkles strokeWidth={1.5} className="w-6 h-6 group-hover:scale-110 group-hover:rotate-12 transition-all" />
                     </button>
@@ -127,7 +127,7 @@ export function LaunchpadStatusHub({ isScrolled = false, onClose }: LaunchpadSta
                             onClose?.();
                             setTimeout(() => openSettings('dashboard'), 100);
                         }}
-                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 group border border-accent-gold hover:bg-neutral-50 dark:hover:bg-white/5 hover:scale-105"
+                        className="w-12 h-12 flex items-center justify-center text-accent-gold rounded-full transition-all duration-300 group border border-accent-gold/30 hover:bg-white/5 hover:scale-105"
                     >
                         <Settings strokeWidth={1.5} className="w-6 h-6 group-hover:rotate-90 transition-transform" />
                     </button>

@@ -180,18 +180,18 @@ export function NewReservationDialog({ isOpen, onClose, onSave, customers }: New
                                                             setStep(2);
                                                         }}
                                                         className={cn(
-                                                            "group flex items-center justify-between p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden",
+                                                            "group flex items-center justify-between p-6 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden backdrop-blur-xl",
                                                             selectedCustomer?.id === customer.id
-                                                                ? "bg-accent border-accent text-bg-primary shadow-2xl shadow-amber-500/10"
-                                                                : "bg-white/5 border-white/5 hover:border-accent/30 hover:shadow-2xl hover:bg-white/10"
+                                                                ? "bg-accent border-accent text-bg-primary shadow-2xl shadow-amber-500/20"
+                                                                : "bg-white/40 dark:bg-white/5 border-white/20 dark:border-white/5 hover:border-accent/30 hover:shadow-2xl hover:bg-white/60 dark:hover:bg-white/10 shadow-sm"
                                                         )}
                                                     >
                                                         <div className="flex items-center gap-6 relative z-10">
                                                             <div className={cn(
-                                                                "w-14 h-14 rounded-2xl flex items-center justify-center font-serif text-xl italic shadow-sm transition-colors",
-                                                                selectedCustomer?.id === customer.id ? "bg-white/10 text-bg-primary" : "bg-white/5 text-white"
+                                                                "w-14 h-14 rounded-2xl flex items-center justify-center font-serif text-xl italic shadow-sm transition-all",
+                                                                selectedCustomer?.id === customer.id ? "bg-white/10 text-bg-primary" : "bg-white/10 dark:bg-white/5 text-text-primary dark:text-white"
                                                             )}>
-                                                                {(customer.firstName || '').charAt(0)}{(customer.lastName || '').charAt(0)}
+                                                                {(customer.firstName || ' ').trim().charAt(0)}{(customer.lastName || ' ').trim().charAt(0)}
                                                             </div>
                                                             <div className="text-left">
                                                                 <p className={cn("text-xl font-serif italic", selectedCustomer?.id === customer.id ? "text-bg-primary" : "text-white")}>

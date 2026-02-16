@@ -11,12 +11,12 @@ export function MobileHeader() {
     const { currentUser } = useAuth();
 
     const getTitle = (path: string) => {
-        const segment = path.split("/").filter(Boolean)[0] || "Dashboard";
-        return segment.charAt(0).toUpperCase() + segment.slice(1).replace("-", " ");
+        const segment = (path.split("/").filter(Boolean)[0] || "Dashboard").trim();
+        return (segment.charAt(0) || '').toUpperCase() + segment.slice(1).replace("-", " ");
     };
 
     return (
-        <header className="lg:hidden min-h-16 pt-[env(safe-area-inset-top)] bg-white/70 dark:bg-bg-primary/70 backdrop-blur-2xl px-6 flex items-center justify-between border-b border-border/40 sticky top-0 z-[50]">
+        <header className="lg:hidden min-h-16 pt-[env(safe-area-inset-top)] bg-white/40 dark:bg-black/40 backdrop-blur-[40px] px-6 flex items-center justify-between border-b border-white/10 dark:border-white/5 sticky top-0 z-[50] shadow-sm">
             <div className="flex items-center gap-2 py-4">
                 <h1 className="text-xl font-serif font-black italic text-text-primary tracking-tight">
                     {getTitle(pathname)}<span className="text-accent-gold not-italic">.</span>

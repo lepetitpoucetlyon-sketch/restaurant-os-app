@@ -446,7 +446,7 @@ export default function OnboardingPage() {
                             <div className="md:col-span-1 space-y-6">
                                 <div className="bg-bg-secondary rounded-2xl p-8 border border-border shadow-sm text-center">
                                     <div className="w-24 h-24 rounded-[2rem] bg-accent/5 border-2 border-accent/20 flex items-center justify-center text-4xl text-accent font-serif mx-auto mb-6 shadow-inner">
-                                        {currentUser?.name.charAt(0)}
+                                        {(currentUser?.name || '').charAt(0)}
                                     </div>
                                     <h2 className="text-2xl font-serif font-semibold text-text-primary">{currentUser?.name}</h2>
                                     <p className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 mb-8">{ROLE_LABELS[currentUser?.role || 'server']}</p>

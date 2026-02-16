@@ -55,6 +55,15 @@ const SEGMENTS = {
     lost: { name: 'À réactiver', color: '#FF9900', icon: AlertCircle },
 };
 
+// Safe accessors for customer data that may come in different formats
+const getFirstName = (c: any): string => c?.firstName || (c?.name ? c.name.split(' ')[0] : '') || '';
+const getLastName = (c: any): string => c?.lastName || (c?.name ? c.name.split(' ').slice(1).join(' ') : '') || '';
+const getInitial = (s: string): string => (s && s.length > 0 ? s[0] : '?');
+const getVisitCount = (c: any): number => c?.visitCount ?? c?.totalVisits ?? 0;
+const getTotalSpent = (c: any): number => c?.totalSpent ?? 0;
+const getPhone = (c: any): string => c?.phone ?? '';
+const getEmail = (c: any): string => c?.email ?? '';
+
 export default function CRMPage() {
     const isMobile = useIsMobile();
     const { showToast } = useToast();
@@ -77,12 +86,13 @@ export default function CRMPage() {
     const [notes, setNotes] = useState('');
 
     const filteredCustomers = customers.filter(c => {
-        const cName = (c as any).name || `${c.firstName} ${c.lastName}`;
-        const cEmail = c.email || '';
+        const cName = (c as any).name || `${getFirstName(c)} ${getLastName(c)}`;
+        const cEmail = getEmail(c);
+        const cPhone = getPhone(c);
         if (filterSegment && (c as any).segment !== filterSegment) return false;
         if (searchQuery && !cName.toLowerCase().includes(searchQuery.toLowerCase()) &&
             !cEmail.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !c.phone.includes(searchQuery)) return false;
+            !cPhone.includes(searchQuery)) return false;
         return true;
     });
 
@@ -115,7 +125,7 @@ export default function CRMPage() {
     };
 
     const handleCRMAction = (action: string, customer: any) => {
-        showToast(`${action} pour ${customer.firstName}`, "info");
+        showToast(`${action} pour ${getFirstName(customer)}`, "info");
     };
 
     return (
@@ -254,14 +264,14 @@ export default function CRMPage() {
                                     <div className="relative shrink-0">
                                         <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-bg-tertiary flex items-center justify-center border border-border shadow-inner">
                                             <span className="text-text-primary font-serif italic text-xl md:text-3xl">
-                                                {customer.firstName[0]}{customer.lastName[0]}
+                                                {getInitial(getFirstName(customer))}{getInitial(getLastName(customer))}
                                             </span>
                                         </div>
                                         <div className="absolute top-0 right-0 w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#3B82F6] border-[2px] md:border-[3px] border-white dark:border-bg-secondary" />
                                     </div>
                                     <div className="space-y-1 md:space-y-3">
                                         <h3 className="text-xl md:text-4xl font-serif text-text-primary italic tracking-tight leading-none">
-                                            {customer.firstName[0]}. {customer.lastName}
+                                            {getInitial(getFirstName(customer))}. {getLastName(customer)}
                                         </h3>
                                         <span className="inline-flex px-3 py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest bg-bg-tertiary text-text-muted/60">
                                             {t(`crm.segments.${(customer as any).segment || 'new'}`)}
@@ -271,11 +281,11 @@ export default function CRMPage() {
                                 <div className="flex gap-4 md:gap-12 mr-2 md:mr-8 text-right">
                                     <div className="hidden sm:block">
                                         <p className="text-[7px] md:text-[9px] font-black text-text-muted/40 uppercase tracking-widest">VISITES</p>
-                                        <p className="text-lg md:text-3xl font-serif italic text-text-primary">{customer.visitCount}</p>
+                                        <p className="text-lg md:text-3xl font-serif italic text-text-primary">{getVisitCount(customer)}</p>
                                     </div>
                                     <div>
                                         <p className="text-[7px] md:text-[9px] font-black text-text-muted/40 uppercase tracking-widest">TOTAL</p>
-                                        <p className="text-lg md:text-3xl font-serif italic text-accent-gold">{customer.totalSpent.toFixed(0)}€</p>
+                                        <p className="text-lg md:text-3xl font-serif italic text-accent-gold">{getTotalSpent(customer).toFixed(0)}€</p>
                                     </div>
                                 </div>
                             </motion.div>
@@ -291,15 +301,15 @@ export default function CRMPage() {
                         <BottomSheet
                             isOpen={true}
                             onClose={() => setSelectedCustomer(null)}
-                            title={selectedCustomer.name}
-                            subtitle={`Profil ${selectedCustomer.segment.toUpperCase()} • ID: ${selectedCustomer.id.slice(0, 8)}`}
+                            title={(selectedCustomer as any).name || `${getFirstName(selectedCustomer)} ${getLastName(selectedCustomer)}`}
+                            subtitle={`Profil ${((selectedCustomer as any).segment || 'new').toUpperCase()} • ID: ${(selectedCustomer.id || '').slice(0, 8)}`}
                         >
                             <div className="space-y-10 py-6">
                                 <div className="grid grid-cols-3 gap-3">
                                     {[
-                                        { value: selectedCustomer.visitCount, label: 'Sessions', icon: Users },
-                                        { value: `${selectedCustomer.totalSpent.toFixed(0)}€`, label: 'Revenue', icon: DollarSign, gold: true },
-                                        { value: `${(selectedCustomer.totalSpent / (selectedCustomer.visitCount || 1)).toFixed(0)}€`, label: 'Panier', icon: TrendingUp }
+                                        { value: getVisitCount(selectedCustomer), label: 'Sessions', icon: Users },
+                                        { value: `${getTotalSpent(selectedCustomer).toFixed(0)}€`, label: 'Revenue', icon: DollarSign, gold: true },
+                                        { value: `${(getTotalSpent(selectedCustomer) / (getVisitCount(selectedCustomer) || 1)).toFixed(0)}€`, label: 'Panier', icon: TrendingUp }
                                     ].map((s, i) => (
                                         <div key={i} className="bg-bg-tertiary p-5 rounded-[2rem] text-center border border-border/50">
                                             <p className={cn("text-xl font-serif italic", s.gold ? "text-accent-gold" : "text-text-primary")}>{s.value}</p>
@@ -311,11 +321,11 @@ export default function CRMPage() {
                                     <h4 className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] px-2">{t('crm.contact_info')}</h4>
                                     <div className="p-5 bg-bg-tertiary rounded-3xl flex items-center gap-5">
                                         <Phone className="w-5 h-5 text-accent-gold/40" />
-                                        <p className="text-sm font-bold tracking-[0.1em]">{selectedCustomer.phone}</p>
+                                        <p className="text-sm font-bold tracking-[0.1em]">{getPhone(selectedCustomer)}</p>
                                     </div>
                                     <div className="p-5 bg-bg-tertiary rounded-3xl flex items-center gap-5">
                                         <Mail className="w-5 h-5 text-accent-gold/40" />
-                                        <p className="text-xs font-bold uppercase tracking-widest text-text-primary">{selectedCustomer.email}</p>
+                                        <p className="text-xs font-bold uppercase tracking-widest text-text-primary">{getEmail(selectedCustomer)}</p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 pt-6">
@@ -344,19 +354,19 @@ export default function CRMPage() {
                                 </button>
                                 <div className="relative z-10">
                                     <div className="w-24 h-24 rounded-[2.5rem] bg-white/10 flex items-center justify-center mb-8 border border-white/20">
-                                        <span className="text-4xl font-serif italic">{selectedCustomer.firstName[0]}{selectedCustomer.lastName[0]}</span>
+                                        <span className="text-4xl font-serif italic">{getInitial(getFirstName(selectedCustomer))}{getInitial(getLastName(selectedCustomer))}</span>
                                     </div>
-                                    <h3 className="text-5xl font-serif italic mb-4 tracking-tight leading-none">{selectedCustomer.firstName} {selectedCustomer.lastName}</h3>
+                                    <h3 className="text-5xl font-serif italic mb-4 tracking-tight leading-none">{getFirstName(selectedCustomer)} {getLastName(selectedCustomer)}</h3>
                                     <div className="flex items-center gap-4">
                                         <div className="w-2 h-2 rounded-full bg-accent-gold" />
-                                        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/40">VIP PRIVILÈGE • {selectedCustomer.id.slice(0, 8)}</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/40">VIP PRIVILÈGE • {(selectedCustomer.id || '').slice(0, 8)}</p>
                                     </div>
                                 </div>
                             </div>
                             <div className="p-10 space-y-10">
                                 {/* Stats & Metrics */}
                                 <div className="grid grid-cols-3 gap-4">
-                                    {[{ v: selectedCustomer.visitCount, l: 'Visites' }, { v: `${selectedCustomer.totalSpent.toFixed(0)}€`, l: 'Total', g: true }, { v: '12%', l: 'Reward' }].map((st, i) => (
+                                    {[{ v: getVisitCount(selectedCustomer), l: 'Visites' }, { v: `${getTotalSpent(selectedCustomer).toFixed(0)}€`, l: 'Total', g: true }, { v: '12%', l: 'Reward' }].map((st, i) => (
                                         <div key={i} className="bg-bg-tertiary p-6 rounded-[2rem] text-center border border-border/40">
                                             <p className={cn("text-2xl font-serif italic", st.g ? "text-accent-gold" : "text-text-primary")}>{st.v}</p>
                                             <p className="text-[7px] font-black text-text-muted/40 uppercase tracking-[0.2em] mt-1">{st.l}</p>
@@ -368,11 +378,11 @@ export default function CRMPage() {
                                     <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em]">{t('crm.contact_info')}</p>
                                     <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-bg-tertiary border border-border/40 hover:border-accent-gold/20 transition-all">
                                         <Phone className="w-4 h-4 text-accent-gold" />
-                                        <p className="text-sm font-bold tracking-widest">{selectedCustomer.phone}</p>
+                                        <p className="text-sm font-bold tracking-widest">{getPhone(selectedCustomer)}</p>
                                     </div>
                                     <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-bg-tertiary border border-border/40 hover:border-accent-gold/20 transition-all">
                                         <Mail className="w-4 h-4 text-accent-gold" />
-                                        <p className="text-sm font-bold uppercase tracking-widest">{selectedCustomer.email}</p>
+                                        <p className="text-sm font-bold uppercase tracking-widest">{getEmail(selectedCustomer)}</p>
                                     </div>
                                 </div>
                             </div>

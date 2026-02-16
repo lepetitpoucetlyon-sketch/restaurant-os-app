@@ -256,26 +256,3 @@ export function RecipeDetailDialog({ isOpen, onClose, recipe }: RecipeDetailDial
         </Modal>
     );
 }
-<div className="max-w-2xl mx-auto">
-    <Button className="w-full bg-accent text-black hover:bg-accent/90 h-20 px-12 rounded-[2rem] font-black text-[14px] uppercase tracking-[0.3em] transition-all transform hover:translate-y-[-4px] shadow-2xl shadow-[#C5A059]/20">
-        <CheckCircle2 className="w-6 h-6 mr-4 text-black" />
-        Valider comme Appris
-    </Button>
-</div>
-                                            </div >
-                                        </motion.div >
-                                    </div >
-                                </div >
-                            </motion.div >
-                        </motion.div >
-                    </div >
-                </div >
-
-    {/* Detail Textures */ }
-    < div className = "absolute inset-0 pointer-events-none opacity-[0.4] mix-blend-overlay"
-style = {{ backgroundImage: `url("https://www.transparenttextures.com/patterns/carbon-fibre.png")` }}
-                />
-            </div >
-        </Modal >
-    );
-}

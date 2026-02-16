@@ -319,7 +319,7 @@ export function NewGroupEventModal({ isOpen, onClose, onSuccess }: NewGroupEvent
                                     onChange={(val) => setFormData(p => ({ ...p, configuration: val as SpaceConfiguration }))}
                                     options={CONFIGURATIONS.map(c => ({
                                         value: c,
-                                        label: c.charAt(0).toUpperCase() + c.slice(1).replace('_', ' ')
+                                        label: (c || '').charAt(0).toUpperCase() + (c || '').slice(1).replace('_', ' ')
                                     }))}
                                 />
                             </div>
