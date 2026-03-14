@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { cn, formatCurrency, formatPercent } from "@/lib/utils";
 import { useManagement } from "@/context/ManagementContext";
 import { useOrders } from "@/context/OrdersContext";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 
 const CATEGORY_TAGS = {
     star: { label: 'Star', color: 'bg-success/10 text-success border-success/30', desc: 'Populaire & Rentable' },
@@ -53,7 +54,11 @@ export default function AnalyticsPage() {
             <div className="flex-1 overflow-auto p-4 md:p-8 space-y-6 md:space-y-10 elegant-scrollbar pb-24 md:pb-12">
                 {/* Executive Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-2xl font-serif font-black text-text-primary italic">Analyses & Performance</h1>
+                    <PageHeaderWithDocs
+                        categoryId="dashboard"
+                        title="Analyses & Performance"
+                        className="text-2xl font-serif font-black text-text-primary italic"
+                    />
                 </div>
 
 

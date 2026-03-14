@@ -351,7 +351,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                 const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    setSettings({ ...defaultSettings, ...parsed });
+                    const freshSettings = { ...defaultSettings, ...parsed };
+                    // Force light mode even if saved as dark/auto
+                    if (freshSettings.theme) {
+                        freshSettings.theme.mode = 'light';
+                    }
+                    setSettings(freshSettings);
                 }
             } catch (error) {
                 console.error('Failed to load settings:', error);
@@ -362,21 +367,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         loadSettings();
     }, []);
 
-    // Apply theme mode to document
+    // Apply theme mode to document - FORCED LIGHT MODE
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const root = window.document.documentElement;
-            root.classList.remove('light', 'dark');
+            // Force light mode only, ignore settings.theme.mode
+            root.classList.remove('dark');
+            root.classList.add('light');
 
-            if (settings.theme.mode === 'auto') {
-                // Check system preference
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                root.classList.add(prefersDark ? 'dark' : 'light');
-            } else {
-                root.classList.add(settings.theme.mode);
-            }
+            // Log for debugging if needed
+            console.log('Force applying light mode');
         }
-    }, [settings.theme.mode]);
+    }, []); // Only on mount is enough if we force it, but let's keep it safe
 
     // Save to localStorage
     const saveSettings = useCallback(async (newSettings: GlobalSettings) => {

@@ -43,6 +43,7 @@ import { fadeInUp, easing } from "@/lib/motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { useIsMobile } from "@/hooks";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 
 const CATEGORY_LABELS: Record<string, string> = {
     produce: 'Fruits & Légumes',
@@ -118,7 +119,11 @@ export default function InventoryPage() {
             {/* Header & Search */}
             <div className="bg-white/80 dark:bg-bg-primary/80 backdrop-blur-2xl px-6 py-6 border-b border-border/50 sticky top-0 z-40">
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-4xl font-serif font-black italic text-text-primary tracking-tight">{t('inventory.tabs.archive')}</h1>
+                    <PageHeaderWithDocs
+                        categoryId="inventory"
+                        title={t('inventory.tabs.archive')}
+                        className="text-4xl font-serif font-black italic text-text-primary tracking-tight"
+                    />
                     <div className="flex items-center gap-2">
                         <button onClick={() => setIsTransferModalOpen(true)} className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                             <RefreshCw className="w-5 h-5" />

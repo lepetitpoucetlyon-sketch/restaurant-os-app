@@ -46,6 +46,7 @@ import {
     ChevronRight, UserCircle, LayoutGrid, Mic
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 
 // Settings categories
 const SETTINGS_CATEGORIES = [
@@ -509,12 +510,12 @@ export default function SettingsPage() {
                     <div className="p-6 md:p-10 pb-0 shrink-0 z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
                             <p className="text-text-muted text-[10px] font-black uppercase tracking-[0.3em] mb-2">Intelligence Système</p>
-                            <h1 className="text-2xl md:text-4xl font-serif text-text-primary uppercase tracking-tight italic">
+                            <PageHeaderWithDocs categoryId="settings" title="" className="text-2xl md:text-4xl font-serif text-text-primary uppercase tracking-tight italic">
                                 PARAMÈTRES <span className="text-border px-1 md:px-2">/</span>
                                 <span className={cn("text-accent")}>
                                     {activeConfig.label.split('&')[0].toUpperCase()}
                                 </span>
-                            </h1>
+                            </PageHeaderWithDocs>
                         </div>
 
                         {/* Status Bar */}

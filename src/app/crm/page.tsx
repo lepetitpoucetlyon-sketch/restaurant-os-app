@@ -45,6 +45,7 @@ import { PremiumSelect, SecurityPinModal } from "@/components/ui";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useCRM } from "@/context/CRMContext";
 import { useAuth } from "@/context/AuthContext";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 import { Customer } from "@/types";
 import { useIsMobile } from "@/hooks";
 
@@ -139,10 +140,10 @@ export default function CRMPage() {
                 >
                     <div className="mb-20">
                         <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.4em] mb-4">{t('crm.database_title')}</p>
-                        <h1 className="text-5xl font-serif text-text-primary italic tracking-tight leading-tight">
+                        <PageHeaderWithDocs categoryId="crm" title="" className="text-5xl font-serif text-text-primary italic tracking-tight leading-tight">
                             {t('crm.concierge_title')} <br />
                             <span className="text-text-muted/20 font-light not-italic">{t('crm.clients_subtitle')}</span>
-                        </h1>
+                        </PageHeaderWithDocs>
                     </div>
 
                     <div className="relative mb-16">
@@ -201,7 +202,7 @@ export default function CRMPage() {
                     {isMobile && (
                         <div className="mb-8 space-y-6">
                             <div className="flex items-center justify-between">
-                                <h1 className="text-4xl font-serif text-text-primary italic tracking-tight">{t('crm.concierge_title')}</h1>
+                                <PageHeaderWithDocs categoryId="crm" title={t('crm.concierge_title')} className="text-4xl font-serif text-text-primary italic tracking-tight" />
                                 <button onClick={() => setShowNewCustomer(true)} className="w-12 h-12 rounded-full bg-text-primary text-white flex items-center justify-center">
                                     <Plus className="w-6 h-6" />
                                 </button>

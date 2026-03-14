@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 
 export default function AccountSettingsPage() {
     const { currentUser, users, rolePermissions, updateRolePermissions, hasAccess } = useAuth();
@@ -94,7 +95,7 @@ export default function AccountSettingsPage() {
                         <Shield className="w-7 h-7 text-success" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black text-text-primary tracking-tight">Gestion des Accès</h1>
+                        <PageHeaderWithDocs categoryId="staff" title="Gestion des Accès" className="text-3xl font-black text-text-primary tracking-tight" />
                         <p className="text-text-muted text-sm">Configurez les permissions d'accès par rôle</p>
                     </div>
                 </div>

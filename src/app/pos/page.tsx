@@ -19,6 +19,7 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useLanguage } from "@/context/LanguageContext";
 import { CATEGORIES } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 
 const ICON_MAP: Record<string, any> = {
     all: Star,
@@ -149,7 +150,13 @@ export default function POSPage() {
                         <button onClick={() => setSelectedTableId(null)} className="text-text-muted">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <h1 className="text-2xl font-serif font-black italic text-text-primary tracking-tight">Table {currentTable?.number}<span className="text-accent-gold ml-1">.</span></h1>
+                        <PageHeaderWithDocs
+                            categoryId="pos"
+                            title={`Table ${currentTable?.number || ''}`}
+                            className="text-2xl font-serif font-black italic text-text-primary tracking-tight"
+                        >
+                            <span className="text-accent-gold ml-1">.</span>
+                        </PageHeaderWithDocs>
                     </div>
                     <button className="w-10 h-10 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted">
                         <MoreHorizontal className="w-5 h-5" />
