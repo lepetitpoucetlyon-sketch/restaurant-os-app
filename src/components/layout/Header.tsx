@@ -10,6 +10,7 @@ import { useNotifications } from "@/context/NotificationsContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandModal } from "@/components/ui/CommandModal";
 import { NotificationPanel } from "@/components/ui/NotificationPanel";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useContextualSettings } from "@/components/settings/ContextualSettings";
@@ -114,10 +115,14 @@ export function Header() {
                         <nav className="flex items-center gap-4 mb-3 opacity-40 hover:opacity-100 transition-all cursor-default hidden">
                         </nav>
                         <div className="flex items-center gap-8">
-                            <h1 className="text-3xl md:text-4xl font-serif font-black text-text-primary tracking-tighter leading-none italic group cursor-default">
-                                {pageTitle}<span className="text-accent-gold not-italic">.</span>
+                            <PageHeaderWithDocs
+                                categoryId={currentPageKey || 'dashboard'}
+                                title={pageTitle}
+                                className="text-3xl md:text-4xl font-serif font-black text-text-primary tracking-tighter leading-none italic group cursor-default"
+                            >
+                                <span className="text-accent-gold not-italic">.</span>
                                 <div className="h-0.5 w-0 group-hover:w-full bg-accent-gold transition-all duration-700 mt-1 shadow-glow" />
-                            </h1>
+                            </PageHeaderWithDocs>
                         </div>
                     </div>
                 </div>

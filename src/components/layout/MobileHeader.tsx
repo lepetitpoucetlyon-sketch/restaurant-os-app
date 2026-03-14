@@ -5,6 +5,8 @@ import { UserCircle, Bell, Search, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { PageHeaderWithDocs } from "@/components/ui/PageHeaderWithDocs";
+import { PageKey } from "@/types/permissions.types";
 
 export function MobileHeader() {
     const pathname = usePathname();
@@ -15,12 +17,53 @@ export function MobileHeader() {
         return (segment.charAt(0) || '').toUpperCase() + segment.slice(1).replace("-", " ");
     };
 
+    // Map pathname to PageKey
+    const getPageKeyFromPath = (path: string): PageKey | 'dashboard' => {
+        const segment = path.split('/').filter(Boolean)[0] || 'dashboard';
+        const pathToPageKey: Record<string, PageKey> = {
+            '': 'dashboard',
+            'dashboard': 'dashboard',
+            'floor-plan': 'floor_plan',
+            'reservations': 'reservations',
+            'omnichannel-reservations': 'reservations',
+            'quotes': 'reservations',
+            'pms': 'reservations',
+            'pos': 'pos',
+            'kitchen': 'kitchen',
+            'kds': 'kds',
+            'inventory': 'inventory',
+            'storage-map': 'storage_map',
+            'crm': 'crm',
+            'staff': 'staff',
+            'planning': 'planning',
+            'leaves': 'leaves',
+            'finance': 'finance',
+            'accounting': 'finance',
+            'analytics': 'analytics',
+            'analytics-integration': 'analytics',
+            'intelligence': 'analytics',
+            'haccp': 'haccp',
+            'quality': 'haccp',
+            'groups': 'groups',
+            'seo': 'seo',
+            'ai-referencing': 'seo',
+            'social-marketing': 'seo',
+            'bar': 'bar',
+            'settings': 'settings',
+            'account-settings': 'settings',
+            'onboarding': 'staff',
+        };
+        return pathToPageKey[segment] || 'dashboard';
+    };
+
+    const categoryId = getPageKeyFromPath(pathname);
+
     return (
         <header className="lg:hidden min-h-16 pt-[env(safe-area-inset-top)] bg-white/40 dark:bg-black/40 backdrop-blur-[40px] px-6 flex items-center justify-between border-b border-white/10 dark:border-white/5 sticky top-0 z-[50] shadow-sm">
             <div className="flex items-center gap-2 py-4">
-                <h1 className="text-xl font-serif font-black italic text-text-primary tracking-tight">
-                    {getTitle(pathname)}<span className="text-accent-gold not-italic">.</span>
-                </h1>
+                <PageHeaderWithDocs categoryId={categoryId} title={getTitle(pathname)} className="text-xl font-serif font-black italic text-text-primary tracking-tight">
+                    <span className="text-accent-gold not-italic">.</span>
+                </PageHeaderWithDocs>
             </div>
 
             <div className="flex items-center gap-4">
